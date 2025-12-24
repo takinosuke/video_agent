@@ -180,33 +180,37 @@ def perplexiy_serch(user_prompt):
 #  動画台本作成
 # -------------------------------
 def create_video_prompt(user_input):
-    outputPromptFormat = {
-        "sequence_control": {
-            "segment_id": "01_of_05", 
-            "total_segments": 5,
-            "current_time_range": "00:00 - 00:08",
-            "is_last_segment": False,
-            "continuation_token": "前後のカットで共通させる固有のキーワード（例：Blue_Cyber_Car_ID_01）"
-        },
-        "visual_instruction": {
-            "prompt_en": "Runway/Luma等にそのまま入力する英文プロンプト",
-            "start_frame_description": "この8秒の開始時の状態（前の動画の最後と一致させる内容）",
-            "end_frame_description": "この8秒の終了時の状態（次の動画の最初に引き継ぐ内容）",
-            "camera_movement": "この8秒間でのカメラの動き（例：ズームインからパン左へ）",
-            "subject_consistency": "主体の特徴（服装、色、形状の固定指示）"
-        },
-        "elements_for_editing": {
-            "on_screen_text": {
-            "text": "表示するテロップ",
-            "display_timing": "00:02 - 00:06"
+    outputPromptFormat = [
+        {
+            "sequence_control": {
+                "segment_id": "01_of_05",
+                "total_segments": 5,
+                "current_time_range": "00:00 - 00:08",
+                "is_last_segment": False,
+                "consistency_key": "Blue_Cyber_Car_ID_01"
             },
-            "narration": {
-            "script": "この8秒間で読み上げる日本語原稿",
-            "reading_speed": "1.0x"
+            "visual_generation_prompt": {
+                "primary_prompt_en": "Cinematic wide shot of a Blue_Cyber_Car_ID_01 racing through a neon Tokyo street at night. [Typography Focus: Large futuristic glowing text 'NEXT GEN' appears floating in the mid-ground]. High speed motion blur, 8k resolution.",
+                "start_frame": "Car positioned at the left third of the frame, headlights on.",
+                "end_frame": "Car reaches the center of the frame, passing under a bridge.",
+                "camera_motion": "Low-angle tracking shot, fast zoom-in towards the car's emblem.",
+                "subject_details": "Metallic blue finish, hexagonal glowing patterns on wheels, sleek aerodynamic body."
             },
-            "audio_cue": "効果音（例：04秒で風切り音）"
+            "post_production_layer": {
+                "overlay_text": {
+                    "content": "未来を、加速させる。",
+                    "style": "Futuristic sans-serif, White with blue glow",
+                    "position": "Center-Bottom",
+                    "in_out_time": "00:02 - 00:06"
+                },
+                "audio_track": {
+                    "narration_script": "加速する未来。その先に見える景色とは。",
+                    "voice_profile": "Deep male voice, calm and professional",
+                    "sound_fx": "00:00 - futuristic engine hum, 00:04 - digital glitch sound"
+                }
+            }
         }
-        }
+    ]
 
     # 最初のメタプロンプト
     prompt = f"""
@@ -240,34 +244,36 @@ def create_video():
     current_video = None
     counter = 0
     
+    # 1. データの存在確認
     if not st.session_state.jsonList or len(st.session_state.jsonList) < 2:
         st.error("動画構成データが見つかりません。")
         return
 
-    raw_json = st.session_state.jsonList[-1] 
-    
-    try:
-        if isinstance(raw_json, str):
-            clean_json = raw_json.replace("```json", "").replace("```", "").strip()
-            video_prompts = json.loads(clean_json)
-        else:
-            video_prompts = raw_json
-    except Exception as e:
-        st.error(f"JSONパースエラー: {e}")
-        return
+    # 最新の構成データを取得（これがJSON形式の文字列であることを想定）
+    moviePrompt = st.session_state.jsonList[-1] 
 
-    if isinstance(video_prompts, dict):
-        video_prompts = [video_prompts] if "visual_instruction" in video_prompts else list(video_prompts.values())
+    # リスト形式でない場合はリスト化（ループを回すため）
+    if not isinstance(moviePrompt, list):
+        moviePrompt = [moviePrompt]
 
-    total_parts = len(video_prompts)
+    total_parts = len(moviePrompt)
     st.write(f"🎬 全 {total_parts} パートの動画生成を開始します。")
 
-    for prm_data in video_prompts:
+    for prm in moviePrompt:
         counter += 1
-        prompt_text = prm_data.get("visual_instruction", {}).get("prompt_en", "High quality cinematic video")
         st.info(f"⏳ パート {counter}/{total_parts} を生成中...")
+
+        # --- シンプルにJSON変数をプロンプトに埋め込む ---
+        # ユーザー様のご指定通り、固定文字と変数を組み合わせたシンプルな形です
+        prompt_text = f"""
+            下記のjsonの要件を満たす動画を作成してください。
+            なお、動画はすべて日本語で作成してください。
+            ↓動画作成のためのインプット
+            {prm}
+            """
         
         try:
+            # 安全な生成実行
             op = safe_generate_video(prompt_text, current_video)
 
             while not op.done:
@@ -278,46 +284,34 @@ def create_video():
                 st.error(f"❌ 生成失敗（パート {counter}）")
                 return
 
-            # --- ここから取得ロジックを強化 ---
+            # 生成された動画情報の取得
             generated_video_info = op.response.generated_videos[0]
             video_object = generated_video_info.video
             
-            # デバッグ用にオブジェクトの属性を確認（Streamlit上に表示）
-            # st.write(f"DEBUG: Video Object Attributes: {dir(video_object)}")
-
-            if counter == total_parts:            
-                st.write("📥 最終動画を保存中...")
+            # 保存処理
+            try:
+                # SDKの仕様に合わせてターゲットを特定
+                target_file = video_object.name if hasattr(video_object, 'name') else video_object
+                video_bytes = genai_client.files.download(file=target_file)
                 
-                # パターン1: video_object 自体をダウンロードに渡す (最新SDKの標準)
-                # パターン2: video_object.uri を使う
-                # パターン3: 出力から直接ファイル名を探す
-                try:
-                    # 最も可能性が高い順に試行
-                    target_file = None
-                    if hasattr(video_object, 'name'): target_file = video_object.name
-                    elif hasattr(video_object, 'uri'): target_file = video_object.uri
-                    else: target_file = video_object # オブジェクトそのもの
+                output_path = f"output_part_{counter}.mp4"
+                with open(output_path, "wb") as f:
+                    f.write(video_bytes)
+                
+                st.success(f"✅ 保存完了: {output_path}")
+                
+                if counter == total_parts:
+                    st.video(video_bytes)
                     
-                    video_bytes = genai_client.files.download(file=target_file)
-                    
-                    output_path = "final_output.mp4"
-                    with open(output_path, "wb") as f:
-                        f.write(video_bytes)
-                    st.success("✨ すべての生成が完了しました！")
-                    st.video(output_path)
-                except Exception as download_err:
-                    st.error(f"ダウンロードに失敗しました: {download_err}")
-            else:
-                st.write(f"✅ パート {counter} 完了。")
-            
-            # 引き継ぎ
+            except Exception as download_err:
+                st.warning(f"保存エラー: {download_err}")
+
+            # 次の動画のために引き継ぎ（これが重要です）
             current_video = video_object
             time.sleep(5)
 
         except Exception as e:
-            st.error(f"予期せぬエラーが発生しました: {e}")
-            import traceback
-            st.code(traceback.format_exc())
+            st.error(f"エラーが発生しました: {e}")
             break
 
 load_dotenv()
