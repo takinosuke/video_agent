@@ -11,6 +11,9 @@ from google import genai
 import google.genai.types as types
 import json
 import re
+from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
+from google.cloud import texttospeech
+import PIL.Image
 
 # 固定の返信（あなたのAI処理の代わり）
 def get_ai_response(user_input):  
@@ -30,7 +33,8 @@ def get_ai_response(user_input):
             create_video_prompt(user_input)
             re_value = json.dumps(st.session_state.jsonList[1], indent=2, ensure_ascii=False)
         case 2:
-            create_video()
+            create_image()
+            #create_video()
             re_value = "動画作成完了！"
     # 再生から戻ってきたプロンプトに対しての後処理
     return f"AI: '{re_value}'"
@@ -136,6 +140,8 @@ def perplexiy_serch(user_prompt):
     re_format = {
             "video_analysis": {
                 "rank": 0,
+                "user_name": "",
+                "video_title": "",
                 "category_genre": "",
                 "duration_seconds": 0,
                 "features": [
@@ -163,10 +169,10 @@ def perplexiy_serch(user_prompt):
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": f"""
-            直近の日本国内でのトレンドから、「実際に再生数が非常に伸びやすい動画の特徴」をかなり具体的に推測してください。
-            人気ランキングを3位までで作成して下さい。
-            下記のjsonフォーマットに従って返答ください。
+            直近の日本国内でのトレンドから、「実際に再生数が非常に伸びやすい動画の特徴」をかなり具体的に推測して下記のjsonのフォーマットで出力して欲しいです。
+            分析は再生数の多い流行りの動画から実在するもの1つ選択して動画についての構成を分析し、「user_name」タグに投稿主の名前、「video_title」タグに動画タイトルを入れてください。
             出力は必ず指定したJSON形式のみで行ってください。解説などの前置きは不要です。
+            ↓出力時のjsonフォーマット
             {json.dumps(re_format, indent=4, ensure_ascii=False)}
             
             また、下記はユーザーからの要望になります。これに沿った形で返答ください。
@@ -236,7 +242,7 @@ def create_video_prompt(user_input):
     動画の秒数は最大30とし、適切な場所で分割して、
     秒数ごとに動画生成をするプロンプトを作成してください。
     作る動画は1本でよいです。日本人に向けた動画なので必ず日本語で作成してください。
-    また暴力的な表現や公序良俗に反する表現は避け、クリーンな映像になるように指示を作成してください。
+    また暴力的な表現や公序良俗に反する表現は避けるように指示を作成してください。
     ↓入力json
     {st.session_state.jsonList[0]}
     
@@ -253,6 +259,64 @@ def create_video_prompt(user_input):
 
     # 最低限のクールダウン
     time.sleep(5)
+
+def create_image():
+    #image_model = genai.GenerativeModel('imagen-3')
+    
+    prompt_json = st.session_state.jsonList[-1]
+    if len(prompt_json) <= 0:
+        print("プロンプトが存在しないため、処理終了。")
+        return
+    current_image = None
+    for json_word in prompt_json:
+        image_prompt = f"""下記jsonは動画を生成するための台本になります。
+        動画を作成するために、基準となる画像を作成して欲しいです。
+        特に”display_text”タグはjsonの値をそのまま画面に表示させてください。
+        さらに、プロンプトとは別に画像の入力がある場合はその画像に続くように出力してください。
+        
+        ↓動画作成台本
+        {json.dumps(json_word, indent=2, ensure_ascii=False)}
+        """
+        print(f"画像生成中: {image_prompt}")
+        
+        if current_image == None:
+            image_response = client.models.generate_images(
+                model='imagen-3.0-generate-002',
+                prompt=image_prompt
+            )   
+        else:
+            image_response = client.models.generate_images(
+                model='imagen-3.0-generate-002',
+                prompt=image_prompt,
+                config=types.GenerateImageConfig(
+                    reference_images=[current_image],
+                    # 必要に応じて、参照の強さなどを制御するパラメータをここに追加できます
+                )
+            )
+            image_response = client.models.generate_content(
+                model="gemini-2.5-flash-image",
+                contents=[
+                    current_image,   # 入力画像
+                    image_prompt,  # テキストプロンプト
+                ],
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],  # 画像だけ欲しい場合。[web:19][web:21]
+                    image_config=types.ImageConfig(
+                        # 必要ならアスペクト比やサイズを指定（省略可）
+                        # aspect_ratio="16:9",
+                        # image_size="1024x576",
+                    ),
+                ),
+            )
+        # 生成された最初の画像を取得
+        #generated_image_data = image_response.images[0]
+        img = image_response.generated_images[0].image
+        #display_img = PIL.Image.open("base_image.png")
+        st.image(img, caption="Loaded from PIL Object", use_container_width=True)
+        current_image = img
+    #img.save("base_image.png")
+    #print("画像を 'base_image.png' として保存しました。")
+
 
 # -------------------------------
 #  動画生成パート（3分割）
@@ -323,88 +387,104 @@ def create_video():
 
     for prm_data in video_prompts:
         counter += 1
-        # プロンプトの組み立て（元の処理を維持）
+        # プロンプトの組み立て
         prompt_text = f"""下記のJsonデータに定義されている特徴の動画を作成してください。
-                        ちなみに
-                        ”audio_and_speech”タグはナレーションについての設定です忠実に設定してある文字を読むようにしてください。
-                        ”display_text”タグは必ず同じ文字を画面表示するようにしてください。
-                        上記2つの設定は必ず反映させるようにしてください。
-
-                        ↓jsonデータ"""
+                        ”audio_and_speech”タグと”display_text”タグは無視してください。
+                        ↓jsonデータ\n"""
         prompt_text += json.dumps(prm_data, indent=2, ensure_ascii=False)
-        st.info(F"動画入力インプット：{prompt_text}")
+        
         st.info(f"⏳ パート {counter}/{total_parts} を生成中...")
         
         try:
             # 1. 動画生成リクエストの送信
-            op = safe_generate_video(prompt_text, current_video)
+            op_initial = safe_generate_video(prompt_text, current_video)
 
-            # 2. 最初に ID (文字列) を確定させる
-            op_id = getattr(op, 'name', op) if not isinstance(op, str) else op
+            # 2. Operation IDを文字列として確実に取得
+            # SDKの戻り値がオブジェクトなら .name、文字列ならそのまま使用
+            op_id = getattr(op_initial, 'name', op_initial)
+            if not isinstance(op_id, str):
+                op_id = str(op_id)
+            
             st.info(f"🔍 Operation ID: {op_id}")
 
             # 3. 待機ループ（ポーリング）
+            actual_op = None
             while True:
-                # 最新状態を取得
-                op = genai_client.operations.get(op_id)
+                actual_op = genai_client.operations.get(op_id)
                 
-                # --- ここを修正：opがオブジェクトであり、かつ 'done' 属性を持っているか厳密にチェック ---
+                # actual_op が辞書かオブジェクトかに関わらず 'done' を取得
                 is_done = False
-                if not isinstance(op, str):
-                    # オブジェクトの場合、.done 属性を確認
-                    is_done = getattr(op, 'done', False)
+                if hasattr(actual_op, 'done'):
+                    is_done = actual_op.done
+                elif isinstance(actual_op, dict):
+                    is_done = actual_op.get('done', False)
                 
                 if is_done:
                     break
                 
-                # 完了していなければ 10秒待機
                 time.sleep(10)
 
             # 4. レスポンスの確認
-            # ここでも op.response へのアクセスを安全にする
-            response = getattr(op, 'response', None)
+            # 完了した actual_op から response を取得
+            response = None
+            if hasattr(actual_op, 'response'):
+                response = actual_op.response
+            elif isinstance(actual_op, dict):
+                response = actual_op.get('response')
+
             if response is None:
-                err_detail = getattr(op, "error", "サーバー内部エラー")
+                # エラー詳細の取得を試みる
+                err_detail = "Unknown error"
+                if hasattr(actual_op, 'error'):
+                    err_detail = actual_op.error
                 st.error(f"❌ パート {counter} の生成に失敗しました。理由: {err_detail}")
                 show_available_videos(completed_videos)
                 return
 
-            # 修正点2: generated_videos リストが存在し、中身があるかチェック
-            if not hasattr(op.response, 'generated_videos') or not op.response.generated_videos:
-                st.error(f"❌ パート {counter}: 動画データが生成されませんでした（安全フィルターの影響の可能性があります）。")
+            # 5. 生成された動画リストの取得
+            # response.generated_videos または response['generatedVideos']
+            gen_videos = getattr(response, 'generated_videos', None)
+            if gen_videos is None and isinstance(response, dict):
+                gen_videos = response.get('generatedVideos')
+
+            if not gen_videos:
+                st.error(f"❌ パート {counter}: 動画データが空です。")
                 show_available_videos(completed_videos)
                 return
 
-            generated_video_info = op.response.generated_videos[0]
-            video_object = generated_video_info.video
+            # 成功時：最初の動画オブジェクトを取得
+            generated_video_info = gen_videos[0]
+            video_object = getattr(generated_video_info, 'video', generated_video_info)
             
-            # --- 以下、成功時の処理（変更なし） ---
             completed_videos.append(video_object)
 
             if counter == total_parts:            
                 st.write("📥 最終動画を保存中...")
-                try:
-                    # ダウンロード処理（元のロジックを維持）
-                    target_file = video_object.name if hasattr(video_object, 'name') else video_object
-                    video_bytes = genai_client.files.download(file=target_file)
-                    
-                    output_path = "final_output.mp4"
-                    with open(output_path, "wb") as f:
-                        f.write(video_bytes)
-                    st.success("✨ すべての生成が完了しました！")
-                    st.video(output_path)
-                except Exception as download_err:
-                    st.error(f"ダウンロードに失敗しました: {download_err}")
+                # ファイル名の取得（文字列またはオブジェクトの .name 属性）
+                target_file_name = getattr(video_object, 'name', video_object)
+                video_bytes = genai_client.files.download(file=target_file_name)
+                
+                output_path = "final_output.mp4"
+                with open(output_path, "wb") as f:
+                    f.write(video_bytes)
+                
+                # 字幕・ナレーション合成
+                # ※ st.session_state.jsonList[-1] はJSON文字列なので、一時ファイルに書き出すか
+                # 　 関数側を dict 対応に修正する必要があります
+                auto_add_subtitle_narration(output_path, st.session_state.jsonList[-1])
+                
+                st.success("✨ すべての生成が完了しました！")
+                st.video(output_path)
             else:
                 st.write(f"✅ パート {counter} 完了。")
             
-            # 修正点：次のパートへの「継続用ビデオ」として、生成されたオブジェクトをセット
             current_video = video_object
-            # APIの負荷を考慮し、少し長めに待機（10秒程度を推奨）
             time.sleep(10) 
 
         except Exception as e:
             st.error(f"予期せぬエラーが発生しました (パート {counter}): {e}")
+            import traceback
+            st.error(traceback.format_exc()) # デバッグ用にスタックトレースを表示
             show_available_videos(completed_videos)
             break
 
@@ -421,6 +501,33 @@ def show_available_videos(video_list):
                 st.video(v_bytes)
             except:
                 st.write(f"パート {i+1} の表示に失敗しました。")
+
+def auto_add_subtitle_narration(video_path, json_path):
+    with open(json_path) as f:
+        config = json.load(f)
+    
+    # TTSナレーション生成
+    client = texttospeech.TextToSpeechClient()
+    narration_text = config["audio_and_speech"]["narration"]["script"]
+    # SSMLでtone/speed/pauses反映
+    ssml = f'<speak><prosody rate="medium">{narration_text}</prosody></speak>'
+    response = client.synthesize_speech(...)  # 前回コード参照
+    audio = AudioFileClip("narration.mp3")
+    
+    # 動画合成
+    video = VideoFileClip(video_path).set_audio(audio)
+    
+    # JSON caption_overlayで字幕追加
+    subtitles = []
+    for caption in config["text_and_display_settings"]["caption_overlay"]:
+        txt_clip = (TextClip(caption["text"], 
+                           fontsize=50, color=caption["font_color"])
+                   .set_position(caption["position"])
+                   .set_start(float(caption["display_timing"])))
+        subtitles.append(txt_clip)
+    
+    final = CompositeVideoClip([video] + subtitles)
+    final.write_videofile("output.mp4")
 
 load_dotenv()
 perpApiKey = os.getenv('PERPLE_API_KEY')
