@@ -339,7 +339,7 @@ def invoke_shotstack(video_file_path, text_prompt):
         
     # --- 実務的な待機 (Polling) ---
     st.info("動画のインジェスト状況を確認中...")
-    video_url = None
+    font_url = None
     
     while True:
         source_res = requests.get(f"{ingest_url}/sources/{source_id}", headers=HEADERS)
@@ -368,7 +368,8 @@ def invoke_shotstack(video_file_path, text_prompt):
         
     # 2. 字幕付き動画のレンダリング指示 (Edit)
     print("Step 2: レンダリングをリクエスト中...")
-    st.write(f"urlは：{video_url}")
+    st.write(f"video_urlは：{video_url}")
+    st.write(f"font_urlは：{font_url}")
     shotstack_json = {
     "timeline": {
         "tracks": [
@@ -510,22 +511,14 @@ def invoke_shotstack(video_file_path, text_prompt):
         # --- 3. 最終的な送信用JSONを組み立てる ---
         final_payload = {
             "timeline": {
-                "tracks": [ai_tracks, video_track]
+                "tracks": [ai_tracks, video_track],
+                "fonts": [{"src":font_url}]
             },
             "output": {
                 "format": "mp4",
                 "resolution": "hd"
             }
         }
-        # final_payload = {
-        #     "timeline": {
-        #         "tracks": ai_tracks
-        #     },
-        #     "output": {
-        #         "format": "mp4",
-        #         "resolution": "hd"
-        #     }
-        # }
 
         # デバッグ用に送信直前の構造をログ出力（重要）
         print("Final Payload Tracks Count:", len(final_payload["timeline"]["tracks"]))
