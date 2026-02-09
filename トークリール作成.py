@@ -117,8 +117,7 @@ def safe_generate_video(prompt, current_video, retries=12):
         try:
             config = types.GenerateVideosConfig(
                 number_of_videos=1,
-                resolution="720p",
-                mode="fast",
+                resolution="720p"
             )
             return genai_client.models.generate_videos(
                 model=veo_model,
@@ -173,6 +172,7 @@ def perplexiy_serch(user_prompt):
             1. トーク特化型のフック：冒頭1〜3秒で「何を言ったか」だけでなく「どう見せたか」を重視すること。
             2. 視聴維持の編集：テロップのタイミング、カットの速さ、BGMの有無など、トークを飽きさせない工夫。
             3. トレンド性：2026年現在の日本における「共感」や「議論」の種をどう扱っているか。
+            4. 値は全て日本語で出力すること。
 
             【出力時のJSONフォーマット】
             {re_format}
@@ -239,15 +239,23 @@ def create_video_prompt(user_input):
     # 最初のメタプロンプト
     prompt = f"""
     あなたはプロのAI動画ディレクターです。
-    下記の入力データ（JSON）に基づき、動画生成AI用の詳細なプロンプトを構成してください。
+    下記の入力データ（JSON）に基づき、**トークリール動画（縦型SNS向けのナレーションベース動画）**を生成するための詳細な台本プロンプトを構成してください。
 
-    ### 業務ルール
-    1. 動画全体の長さは最大30秒とします。
-    2. 動画生成AIの制約上、1回につき最大8秒しか生成できないため、全体を「4つ程度のセグメント（パート）」に分割してください。
-    3. 各セグメントごとに、下記のJSONフォーマットに準拠したデータを作成してください。
-    4. **最終的な出力は、それらすべてのセグメントを格納した「1つのJSON配列（リスト形式）」としてください。**
-    5. 日本人向け動画のため、テキストや説明は必ず日本語で作成してください。
-    6. 公序良俗に反する表現や暴力的な表現は厳禁です。
+    業務ルール
+    1.動画全体の長さは最大30秒とします。
+    2.動画生成AIの制約上、1回につき最大8秒しか生成できないため、全体を「4つ程度のセグメント（パート）」に分割してください。
+    3.各セグメントごとに、下記のJSONフォーマットに準拠したデータを作成してください。
+    4.最終的な出力は、それらすべてのセグメントを格納した「1つのJSON配列（リスト形式）」としてください。
+    5.日本人向け動画のため、テキストや説明は必ず日本語で作成してください。
+    6.公序良俗に反する表現や暴力的な表現は厳禁です。
+    7.特定のインフルエンサーや実在するユーザーアカウント名など、個人を特定する内容は入れないでください。
+    8.  本プロンプトはアバターや人物映像を使用しない、背景とテキスト・ナレーションのみで構成されたトークリール専用の台本にしてください。
+    9.以下の点を特に重視して構成してください：
+    　・ナレーションが視聴者に直接語りかけるような自然で親しみやすい口調にする
+    　・背景映像はナレーション内容に合わせて変化させる（例：場面転換・色味・雰囲気）
+    　・各セグメントには「ナレーション台詞」「背景演出」「テロップ案」を含める
+    　・会話テンポを意識して、1文は短く区切る
+    　・冒頭で視聴者の興味を引く一言（フック）を入れる
 
     ### 出力フォーマット（必ずこの「JSON配列」の形式を守ること）
     {json.dumps(outputPromptFormat, indent=4, ensure_ascii=False)}
@@ -648,8 +656,9 @@ def create_video():
         # プロンプトの組み立て
         prompt_text = f"""
         # 役割: 
-        あなたは純粋な映像クリエイターです。提供されたデータから「映像（視覚的特徴）visual_instruction」のみを抽出して動画を生成してください。
-
+        あなたは純粋な映像クリエイターです。提供されたデータから音声などの音を含まない「映像（視覚的特徴）visual_instruction」のみを抽出して動画を生成してください。
+        下記の事項を最優先で満たすようにしてください。
+        
         # 絶対遵守事項:
         1. 画面内に「文字」「字幕」「タイトル」「テキスト」を一切含めないでください。
         2. 音声（BGM、効果音、ナレーション、環境音）を一切生成せず、無音の映像のみを構成してください。
@@ -731,10 +740,40 @@ def create_video():
                 with open(output_path, "wb") as f:
                     f.write(video_bytes)
                 
-                # 字幕・ナレーション合成
-                # ※ st.session_state.jsonList[-1] はJSON文字列なので、一時ファイルに書き出すか
-                # 　 関数側を dict 対応に修正する必要があります
-                auto_add_subtitle_narration(output_path, st.session_state.jsonList[-1])
+                # --- 【ここを修正】 ---
+                # JSONの中身を一時ファイルとして保存する
+                temp_json_path = "temp_video_config.json"
+                json_content = st.session_state.jsonList[-1]
+
+                # 1. 前後の余計な空白や改行を消す
+                json_content = json_content.strip()
+
+                # 2. Markdownのマークアップ（```json や ```）を徹底的に除去
+                if json_content.startswith("```"):
+                    # 最初の行（```jsonなど）を消す
+                    lines = json_content.splitlines()
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]
+                    # 最後の行（```）を消す
+                    if lines and lines[-1].startswith("```"):
+                        lines = lines[:-1]
+                    json_content = "\n".join(lines).strip()
+
+                # 3. もし冒頭に "json" という単語だけ残っていたら消す
+                if json_content.lower().startswith("json"):
+                    json_content = json_content[4:].strip()
+
+                # 4. ファイルに書き出す
+                with open(temp_json_path, "w", encoding="utf-8") as f:
+                    f.write(json_content)
+
+                # 書き出した中身が空でないかデバッグ確認（ターミナルに表示されます）
+                print(f"DEBUG: Saved JSON length: {len(json_content)}")
+                if len(json_content) == 0:
+                    print("DEBUG ERROR: JSON content is empty!")
+
+                # 保存した「パス」を渡す
+                auto_add_subtitle_narration(output_path, temp_json_path)
                 
                 st.success("✨ すべての生成が完了しました！")
                 st.video(output_path)
@@ -798,7 +837,7 @@ googleKey = os.getenv('GOOGLE_API_KEY')
 
 # Perplexity API
 client = OpenAI(api_key=perpApiKey, base_url="https://api.perplexity.ai")
-veo_model = "veo-3.1-generate-preview"
+veo_model = "veo-3.1-fast-generate-preview"
 
 genai_client = genai.Client(api_key=googleKey)
 setup_app()
