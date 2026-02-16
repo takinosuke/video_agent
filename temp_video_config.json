@@ -1,396 +1,294 @@
-```json
 [
-    {
-        "sequence_control": {
-            "segment_id": "01",
-            "total_segments": "4",
-            "current_time_range": "0-7s",
-            "is_last_segment": false,
-            "continuation_token": "next_segment_02"
-        },
-        "visual_instruction": {
-            "prompt_en": "A busy Japanese woman quickly folds laundry and puts away dishes with superhuman speed, looking shocked and then determined. The scene is fast-paced with quick cuts. Background is a modern, tidy home interior.",
-            "start_frame_description": "ナレーターが驚いた表情で、山積みの洗濯物を高速で畳み始める。",
-            "end_frame_description": "ナレーターがカメラに向かって、何かを訴えるように勢いよく振り返る。",
-            "camera_movement": "手持ち風のクイックパンとズームイン・アウトを多用。カット毎にアングルを切り替える。",
-            "subject_consistency": "日本の家屋にいる30代くらいの女性ナレーター。服装はカジュアルだが清潔感がある。"
-        },
-        "text_and_display_settings": {
-            "on_screen_display": {
-                "display_text": "洗濯が1分で終わる！？",
-                "display_type": "タイトルテロップ",
-                "design_notes": "画面中央に大きく、インパクトのあるフォントで表示。一瞬で表示され、爆発的なエフェクトを伴う。",
-                "language_priority": "日本語"
-            },
-            "caption_overlay": [
-                {
-                    "text": "え？",
-                    "display_timing": "0.5s-1.0s",
-                    "style": "ポップアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#FF0000"
-                },
-                {
-                    "text": "洗濯が1分で終わるってホント！？",
-                    "display_timing": "1.0s-3.5s",
-                    "style": "アニメーション付きポップアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "家事の無駄時間、",
-                    "display_timing": "4.0s-5.5s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#FFFF00",
-                    "edge_color": "#333333"
-                },
-                {
-                    "text": "もううんざりですよね？",
-                    "display_timing": "5.5s-7.0s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#FFFF00",
-                    "edge_color": "#333333"
-                }
-            ]
-        },
-        "audio_and_speech": {
-            "narration": {
-                "script": "え？洗濯が1分で終わるってホント！？家事の無駄時間、もううんざりですよね？",
-                "reading_guide": "最初の「え？」は驚きと疑問を強調。続く言葉はたたみかけるように速く、共感を呼ぶトーンで。",
-                "voice_tone": "驚き→共感、やや高めの声で、はっきりと。",
-                "speech_speed": "速め",
-                "pauses": "「え？」の後に一瞬、疑問を強調するためのポーズ。"
-            },
-            "audio_cue": [
-                {
-                    "time": "0.8s",
-                    "effect": "驚きのSE（パッと開くような音）"
-                },
-                {
-                    "time": "1.0s",
-                    "effect": "高速作業のSE（シュッシュッという効果音）"
-                },
-                {
-                    "time": "3.8s",
-                    "effect": "短いシンセのドロップ音"
-                }
-            ]
-        }
+  {
+    "sequence_control": {
+      "segment_id": "S001",
+      "total_segments": "4",
+      "current_time_range": "0s - 7s",
+      "is_last_segment": false,
+      "continuation_token": "動画制作の課題提起から成功事例への導入、期待感を高める"
     },
-    {
-        "sequence_control": {
-            "segment_id": "02",
-            "total_segments": "4",
-            "current_time_range": "7-14s",
-            "is_last_segment": false,
-            "continuation_token": "next_segment_03"
-        },
-        "visual_instruction": {
-            "prompt_en": "A Japanese woman looks tired while sitting among piles of laundry, then transforms into an energetic, smiling woman in a clean, organized kitchen. Dynamic before-and-after visual. Focus on her expression change.",
-            "start_frame_description": "ナレーターがため息をつき、疲れた表情で散らかったリビングに座っている。",
-            "end_frame_description": "ナレーターが笑顔で指を立て、「大丈夫！」と示すように力強く頷く。",
-            "camera_movement": "クローズアップから始まり、広角で部屋全体を見せる。表情の変化に合わせてズームイン。",
-            "subject_consistency": "セグメント1と同一の女性ナレーター。服装はセグメント間で変わっても良いが、系統は維持。"
-        },
-        "text_and_display_settings": {
-            "on_screen_display": {
-                "display_text": "忙しい毎日…",
-                "display_type": "キャッチフレーズ",
-                "design_notes": "画面上部に横長で表示。背景に薄く透過した家事関連のアイコンが流れる。",
-                "language_priority": "日本語"
-            },
-            "caption_overlay": [
-                {
-                    "text": "毎日忙しくて、",
-                    "display_timing": "7.5s-8.5s",
-                    "style": "スライドイン（左から）",
-                    "position": "bottom_center",
-                    "font_color": "#FFD700",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "時間がない…",
-                    "display_timing": "8.5s-9.5s",
-                    "style": "スライドイン（左から）",
-                    "position": "bottom_center",
-                    "font_color": "#FFD700",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "そう思っていませんか？",
-                    "display_timing": "9.5s-10.5s",
-                    "style": "スライドイン（左から）",
-                    "position": "bottom_center",
-                    "font_color": "#FFD700",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "でも大丈夫！",
-                    "display_timing": "11.0s-12.0s",
-                    "style": "拡大ポップアップ",
-                    "position": "bottom_center",
-                    "font_color": "#00FF00",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "たった３つの裏技で、",
-                    "display_timing": "12.0s-13.0s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "あなたの家事が激変します！",
-                    "display_timing": "13.0s-14.0s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                }
-            ]
-        },
-        "audio_and_speech": {
-            "narration": {
-                "script": "毎日忙しくて、時間がない…そう思っていませんか？でも大丈夫！たった３つの裏技で、あなたの家事が激変します！",
-                "reading_guide": "最初の問いかけは共感を誘うように優しく、解決策の提示は力強く、期待感を持たせるように。",
-                "voice_tone": "優しい問いかけ→力強い提案、徐々に明るく。",
-                "speech_speed": "中速から速め",
-                "pauses": "「時間がない…」の後に短いポーズ。「でも大丈夫！」の前にしっかりめのポーズ。"
-            },
-            "audio_cue": [
-                {
-                    "time": "7.5s",
-                    "effect": "悲しいBGMから希望的なBGMへ切り替わる"
-                },
-                {
-                    "time": "11.0s",
-                    "effect": "解決を促すようなキラキラしたSE"
-                }
-            ]
-        }
+    "visual_instruction": {
+      "prompt_en": "Abstract digital interface with subtle glowing lines representing data flow and creative process. Gradually transitions from a dim, pensive blue to a brighter, inspiring yellow-orange. Clean, modern aesthetic.",
+      "start_frame_description": "暗めの青色の背景に、思考を巡らせるような抽象的なデータフローのラインが静かに表示されている。",
+      "end_frame_description": "背景が徐々に明るい黄橙色に変化し、未来への期待感を表すクリアな光の粒子が舞い始める。画面中央には「成功事例」の文字が浮かび上がる兆し。",
+      "camera_movement": "思考を表現するような緩やかなズームアウトから、期待感を高めるような緩やかなズームイン。テキスト出現に合わせて背景が微かに揺れる。",
+      "subject_consistency": "抽象的なデジタルインターフェースのテーマを一貫させる。色味が青から黄橙へ変化。"
     },
-    {
-        "sequence_control": {
-            "segment_id": "03",
-            "total_segments": "4",
-            "current_time_range": "14-21s",
-            "is_last_segment": false,
-            "continuation_token": "next_segment_04"
+    "text_and_display_settings": {
+      "on_screen_display": {
+        "display_text": "動画制作、本当に大変ですよね？\n視聴者に刺さる動画、どうすれば作れると思いますか？\n今回は、驚異の再生数を叩き出した『時短ノウハウ動画』を徹底分析！\n成功の秘訣を、一緒に見ていきましょう！",
+        "display_type": "複数行テキスト、段階的に表示",
+        "design_notes": "質問は少し大きめ、分析の提示はインパクトを出す。明るい色調に変化。",
+        "language_priority": "日本語"
+      },
+      "caption_overlay": [
+        {
+          "text": "動画制作、行き詰まっていませんか？",
+          "display_timing": "0.5s - 3s",
+          "style": "インパクトのある太字",
+          "position": "中央上",
+          "font_color": "#FFFFFF",
+          "edge_color": "#000000"
         },
-        "visual_instruction": {
-            "prompt_en": "A Japanese woman demonstrates three distinct, rapid household hacks (e.g., efficient dishwashing, quick tidying, smart storage). Each hack is shown in a split-second, before-and-after comparison. Energetic and clean visuals.",
-            "start_frame_description": "画面が3分割され、各区画で異なる時短家事の「ビフォー」状態が映し出される。",
-            "end_frame_description": "3つの裏技が完了し、それぞれの区画が「アフター」状態になり、ナレーターが満足げに頷く。",
-            "camera_movement": "高速カットと、それぞれのデモに合わせた短いズームイン。固定カメラでデモを明確に見せる。",
-            "subject_consistency": "セグメント1, 2と同一の女性ナレーター。家事デモは手元や全身を使い分かりやすく表現。"
+        {
+          "text": "【成功事例】驚異の再生数！",
+          "display_timing": "3.5s - 5.5s",
+          "style": "ポップアップ、強調",
+          "position": "中央",
+          "font_color": "#FFD700",
+          "edge_color": "#000000"
         },
-        "text_and_display_settings": {
-            "on_screen_display": {
-                "display_text": "【裏技① 瞬速畳み術】",
-                "display_type": "ステップ表示",
-                "design_notes": "画面左上に各ステップ番号とタイトルを太字で表示。爆発エフェクトと共に登場し、すぐに次のステップへ切り替わる。",
-                "language_priority": "日本語"
-            },
-            "caption_overlay": [
-                {
-                    "text": "ポイントは３つ！",
-                    "display_timing": "14.0s-15.0s",
-                    "style": "拡大表示",
-                    "position": "bottom_center",
-                    "font_color": "#00FFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "１つ目は…",
-                    "display_timing": "15.0s-16.0s",
-                    "style": "スライドアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "〇〇！",
-                    "display_timing": "16.0s-17.0s",
-                    "style": "爆発",
-                    "position": "bottom_center",
-                    "font_color": "#FF00FF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "２つ目は…",
-                    "display_timing": "17.0s-18.0s",
-                    "style": "スライドアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "△△！",
-                    "display_timing": "18.0s-19.0s",
-                    "style": "爆発",
-                    "position": "bottom_center",
-                    "font_color": "#FF00FF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "そして３つ目は…",
-                    "display_timing": "19.0s-20.0s",
-                    "style": "スライドアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "コレです！",
-                    "display_timing": "20.0s-21.0s",
-                    "style": "爆発",
-                    "position": "bottom_center",
-                    "font_color": "#FF00FF",
-                    "edge_color": "#000000"
-                }
-            ]
-        },
-        "audio_and_speech": {
-            "narration": {
-                "script": "ポイントは３つ！１つ目は〇〇！２つ目は△△！そして３つ目はコレです！",
-                "reading_guide": "各ポイントを区切るように、テンポ良く、少しずつ盛り上げていく。キーワードは強調。",
-                "voice_tone": "リズミカルで明確、説得力がある。",
-                "speech_speed": "速め",
-                "pauses": "各ポイントの間で短くポーズ。「コレです！」の後に少し間を取る。"
-            },
-            "audio_cue": [
-                {
-                    "time": "15.0s",
-                    "effect": "効果音（ピンポン）"
-                },
-                {
-                    "time": "16.0s",
-                    "effect": "テロップ爆発音"
-                },
-                {
-                    "time": "17.0s",
-                    "effect": "効果音（ピンポン）"
-                },
-                {
-                    "time": "18.0s",
-                    "effect": "テロップ爆発音"
-                },
-                {
-                    "time": "19.0s",
-                    "effect": "効果音（ピンポン）"
-                },
-                {
-                    "time": "20.0s",
-                    "effect": "テロップ爆発音（一番大きく）"
-                }
-            ]
+        {
+          "text": "時短ノウハウ動画を分析",
+          "display_timing": "5.5s - 7s",
+          "style": "シンプル",
+          "position": "中央下",
+          "font_color": "#FFFFFF",
+          "edge_color": "#000000"
         }
+      ]
     },
-    {
-        "sequence_control": {
-            "segment_id": "04",
-            "total_segments": "4",
-            "current_time_range": "21-30s",
-            "is_last_segment": true,
-            "continuation_token": null
+    "audio_and_speech": {
+      "narration": {
+        "script": "動画制作、本当に大変ですよね？視聴者に刺さる動画、どうすれば作れると思いますか？今回は、驚異の再生数を叩き出した『時短ノウハウ動画』を徹底分析！成功の秘訣を、一緒に見ていきましょう！",
+        "reading_guide": "最初の問いかけは問いかけるように、次に少し間を取り、期待感を込めて読み上げる。",
+        "voice_tone": "親しみやすく、かつプロフェッショナルなトーン。語りかけるような口調。",
+        "speech_speed": "やや速め",
+        "pauses": "「大変ですよね？」の後、少し間。「思いますか？」の後、少し間。"
+      },
+      "audio_cue": [
+        {
+          "time": "0.2s",
+          "effect": "軽快な開始音"
         },
-        "visual_instruction": {
-            "prompt_en": "A radiant Japanese woman happily enjoys free time in her perfectly organized home, smiling at the camera. The scene shifts to an interactive overlay prompting user comments. Focus on a feeling of accomplishment and connection.",
-            "start_frame_description": "ナレーターがゆったりとコーヒーを飲みながら、整理整頓された部屋でくつろいでいる。",
-            "end_frame_description": "ナレーターがカメラに向かって微笑み、コメント欄を指差しながら、視聴者のコメントを待つポーズをとる。",
-            "camera_movement": "広角からナレーターの笑顔にゆっくりとズームイン。最後は画面中央で固定し、コメントを促すグラフィックがオーバーレイされる。",
-            "subject_consistency": "セグメント1, 2, 3と同一の女性ナレーター。服装はセグメント間で変わっても良いが、系統は維持。"
-        },
-        "text_and_display_settings": {
-            "on_screen_display": {
-                "display_text": "これであなたも時短ママ！",
-                "display_type": "エンディングタイトル",
-                "design_notes": "画面中央に、希望に満ちた明るい色とフォントで表示。最後は「あなたの時短術、教えて！」のテキストに切り替わる。",
-                "language_priority": "日本語"
-            },
-            "caption_overlay": [
-                {
-                    "text": "もう家事に追われる日々とは",
-                    "display_timing": "21.0s-22.5s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "お別れ！",
-                    "display_timing": "22.5s-23.5s",
-                    "style": "拡大ポップアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFD700",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "これであなたも",
-                    "display_timing": "24.0s-25.0s",
-                    "style": "スライドアップ",
-                    "position": "bottom_center",
-                    "font_color": "#FFFFFF",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "時短ママの仲間入り！",
-                    "display_timing": "25.0s-26.5s",
-                    "style": "爆発エフェクト",
-                    "position": "bottom_center",
-                    "font_color": "#00FF00",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "あなたの時短術、",
-                    "display_timing": "27.0s-28.5s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#ADD8E6",
-                    "edge_color": "#000000"
-                },
-                {
-                    "text": "ぜひコメントで教えてくださいね！",
-                    "display_timing": "28.5s-30.0s",
-                    "style": "フェードイン",
-                    "position": "bottom_center",
-                    "font_color": "#ADD8E6",
-                    "edge_color": "#000000"
-                }
-            ]
-        },
-        "audio_and_speech": {
-            "narration": {
-                "script": "もう家事に追われる日々とはお別れ！これであなたも時短ママの仲間入り！あなたの時短術、ぜひコメントで教えてくださいね！",
-                "reading_guide": "解放感と達成感を表現。最後のCTAは、視聴者との対話を促すように、親しみやすく語りかける。",
-                "voice_tone": "明るく、満足げで、親しみやすい。",
-                "speech_speed": "ややゆっくりめ",
-                "pauses": "「お別れ！」の後に一瞬、達成感を強調するポーズ。最後の質問の前に短いポーズ。"
-            },
-            "audio_cue": [
-                {
-                    "time": "21.5s",
-                    "effect": "爽やかなBGMに切り替わる"
-                },
-                {
-                    "time": "23.0s",
-                    "effect": "解放感をイメージするSE（風が抜けるような音）"
-                },
-                {
-                    "time": "26.0s",
-                    "effect": "ポジティブなジングル"
-                },
-                {
-                    "time": "28.0s",
-                    "effect": "視聴者に呼びかけるような優しいSE"
-                }
-            ]
+        {
+          "time": "3.0s",
+          "effect": "上昇するような効果音（フック時）"
         }
+      ]
     }
+  },
+  {
+    "sequence_control": {
+      "segment_id": "S002",
+      "total_segments": "4",
+      "current_time_range": "7s - 14s",
+      "is_last_segment": false,
+      "continuation_token": "視聴者の共感ポイントと課題の言語化に焦点を当てる"
+    },
+    "visual_instruction": {
+      "prompt_en": "Warm, empathetic atmosphere with soft, pastel colors. Abstract representation of intertwining thoughts and emotions, gradually forming into a clear, focused point. Gentle, flowing lines.",
+      "start_frame_description": "淡いピンクやオレンジの暖色系の背景に、抽象的な曲線が絡み合い、視聴者の「見えない疲労」を表している。",
+      "end_frame_description": "曲線が徐々に収束し、中央に一つのクリアな光の点として「共感」が表現される。背景は落ち着いたグリーンやブルーに変化し、解決を示唆。",
+      "camera_movement": "絡み合う要素を俯瞰するような緩やかなパンから、中央の光の点にフォーカスするズームイン。キーワードの出現に合わせて光が瞬く。",
+      "subject_consistency": "抽象的な感情表現のテーマを一貫させ、色味の変化で感情の整理を表現。"
+    },
+    "text_and_display_settings": {
+      "on_screen_display": {
+        "display_text": "この動画の強みは、まず『共感』でした。\n忙しい主婦層の『見えない疲労』を、ズバリ言語化。\n視聴者の心に深く響くフックを生み出していました。\nあなたのターゲットは、何を求めていますか？",
+        "display_type": "複数行テキスト、段階的に表示",
+        "design_notes": "共感を強調する部分を暖色系フォントにするなど、感情的な色合いを出す。",
+        "language_priority": "日本語"
+      },
+      "caption_overlay": [
+        {
+          "text": "鍵は『共感』",
+          "display_timing": "7.5s - 9.5s",
+          "style": "太字、強調",
+          "position": "中央上",
+          "font_color": "#FF6347",
+          "edge_color": "#FFFFFF"
+        },
+        {
+          "text": "見えない疲労を言語化",
+          "display_timing": "9.5s - 11.5s",
+          "style": "ポップアップ",
+          "position": "中央",
+          "font_color": "#FFA500",
+          "edge_color": "#FFFFFF"
+        },
+        {
+          "text": "視聴者の心を掴む",
+          "display_timing": "11.5s - 13s",
+          "style": "シンプル",
+          "position": "中央下",
+          "font_color": "#FFFFFF",
+          "edge_color": "#000000"
+        }
+      ]
+    },
+    "audio_and_speech": {
+      "narration": {
+        "script": "この動画の強みは、まず『共感』でした。忙しい主婦層の『見えない疲労』を、ズバリ言語化。視聴者の心に深く響くフックを生み出していました。あなたのターゲットは、何を求めていますか？",
+        "reading_guide": "「共感」の部分を少し強調し、問いかけは穏やかに。",
+        "voice_tone": "説得力がありつつ、親身なトーン。質問は優しく。",
+        "speech_speed": "標準",
+        "pauses": "「共感』でした。」の後、少し間。「言語化。」の後、少し間。"
+      },
+      "audio_cue": [
+        {
+          "time": "7.2s",
+          "effect": "柔らかい強調音"
+        },
+        {
+          "time": "10.0s",
+          "effect": "キラリと光るような効果音"
+        }
+      ]
+    }
+  },
+  {
+    "sequence_control": {
+      "segment_id": "S003",
+      "total_segments": "4",
+      "current_time_range": "14s - 22s",
+      "is_last_segment": false,
+      "continuation_token": "動画の構成やテンポ、視覚的な戦略について説明"
+    },
+    "visual_instruction": {
+      "prompt_en": "Dynamic, fast-paced visual with geometric shapes and lines rapidly assembling and disassembling. Bright, contrasting colors (e.g., electric blue, vibrant orange, sharp white) to convey energy and speed. Text elements pop into existence.",
+      "start_frame_description": "電気ブルーや鮮やかなオレンジを基調とした背景に、幾何学的な図形やラインが素早く動き回り、情報の高速な流れを表現している。",
+      "end_frame_description": "複数の図形が中央に素早く収束し、一つの明確な「解決策」のシンボルを形成。背景は明るくクリアな白に変わり、効率性を強調。",
+      "camera_movement": "高速で移動する視点移動、またはオブジェクトの高速な動きに合わせてパン・ズーム。テロップの出現と同時にエフェクトを伴う。",
+      "subject_consistency": "幾何学的でダイナミックな動きのテーマを一貫させる。色のコントラストで視認性を高める。"
+    },
+    "text_and_display_settings": {
+      "on_screen_display": {
+        "display_text": "そして、高速テンポの構成が、離脱を防ぎました。\n冒頭3秒で『即効性』を視覚的に強調。\n短いカットと、強調テロップで飽きさせません。\n具体的な解決策を、素早く提示するんです。",
+        "display_type": "1文ずつポップアップ表示",
+        "design_notes": "速度とインパクトを重視。テロップは太字で、出現時にエフェクト（例：弾む、フェードイン）。",
+        "language_priority": "日本語"
+      },
+      "caption_overlay": [
+        {
+          "text": "高速テンポで離脱防止",
+          "display_timing": "14.5s - 16.5s",
+          "style": "太字、アニメーション",
+          "position": "中央上",
+          "font_color": "#00FFFF",
+          "edge_color": "#000000"
+        },
+        {
+          "text": "冒頭3秒でフック",
+          "display_timing": "16.5s - 18.5s",
+          "style": "ポップアップ、強調",
+          "position": "中央",
+          "font_color": "#FF4500",
+          "edge_color": "#FFFFFF"
+        },
+        {
+          "text": "短いカット・強調テロップ",
+          "display_timing": "18.5s - 20s",
+          "style": "素早い表示",
+          "position": "中央下",
+          "font_color": "#FFFFFF",
+          "edge_color": "#000000"
+        }
+      ]
+    },
+    "audio_and_speech": {
+      "narration": {
+        "script": "そして、高速テンポの構成が、離脱を防ぎました。冒頭3秒で『即効性』を視覚的に強調。短いカットと、強調テロップで飽きさせません。具体的な解決策を、素早く提示するんです。",
+        "reading_guide": "テンポ良く、強調したいキーワードは強く。「素早く提示するんです」は語尾を上げて勢い良く。",
+        "voice_tone": "ハキハキと、情報を伝えるようなトーン。やや興奮気味でも良い。",
+        "speech_speed": "速め",
+        "pauses": "「防ぎました。」の後、短く間。「強調。」の後、短く間。"
+      },
+      "audio_cue": [
+        {
+          "time": "14.2s",
+          "effect": "パンチのある効果音"
+        },
+        {
+          "time": "16.0s",
+          "effect": "素早い切り替え音"
+        },
+        {
+          "time": "18.5s",
+          "effect": "テロップ表示音"
+        }
+      ]
+    }
+  },
+  {
+    "sequence_control": {
+      "segment_id": "S004",
+      "total_segments": "4",
+      "current_time_range": "22s - 30s",
+      "is_last_segment": true,
+      "continuation_token": "動画のまとめと視聴者への行動喚起"
+    },
+    "visual_instruction": {
+      "prompt_en": "Inviting and expansive visual with a subtle gradient of uplifting colors (e.g., light purple to warm yellow). Abstract connection lines or network graphs symbolizing community and shared knowledge. A central, bright spotlight for the call to action.",
+      "start_frame_description": "暖かく、広がりを感じさせるグラデーション（薄い紫から優しい黄色へ）の背景に、人と人との繋がりを思わせる抽象的なネットワークラインが描かれている。",
+      "end_frame_description": "ネットワークラインが中央の明るい光のスポットへと収束し、メッセージが強調される。背景全体がポジティブな輝きに包まれる。",
+      "camera_movement": "全体を見渡すような緩やかなズームアウトから、最後のメッセージに向けて中央に焦点を合わせるズームイン。CTAの出現に合わせて光が強まる。",
+      "subject_consistency": "繋がりやコミュニティを表現する抽象的なモチーフと、暖色系の色使いを一貫させる。"
+    },
+    "text_and_display_settings": {
+      "on_screen_display": {
+        "display_text": "最後に、視聴者との『共感共有』を促し、\nコメント欄での議論を自然に誘導していました。\nこの成功事例から、動画の質を高めるヒントが見えましたね。\nあなたも、次の一歩を踏み出してみませんか？",
+        "display_type": "複数行テキスト、段階的に表示",
+        "design_notes": "結論とCTAなので、メッセージをクリアに。最後は企業ロゴや「プロのAI動画ディレクター」の文字が目立つように。",
+        "language_priority": "日本語"
+      },
+      "caption_overlay": [
+        {
+          "text": "共感共有と議論誘導",
+          "display_timing": "22.5s - 24.5s",
+          "style": "太字、視認性高く",
+          "position": "中央上",
+          "font_color": "#FFC0CB",
+          "edge_color": "#000000"
+        },
+        {
+          "text": "成功のヒントはここに",
+          "display_timing": "24.5s - 26.5s",
+          "style": "メッセージ性を強調",
+          "position": "中央",
+          "font_color": "#90EE90",
+          "edge_color": "#000000"
+        },
+        {
+          "text": "あなたの動画を次に繋げる",
+          "display_timing": "26.5s - 28.5s",
+          "style": "未来志向",
+          "position": "中央下",
+          "font_color": "#ADD8E6",
+          "edge_color": "#000000"
+        },
+        {
+          "text": "プロのAI動画ディレクターにお任せください！",
+          "display_timing": "28.5s - 30s",
+          "style": "最後のCTA、一番目立つように",
+          "position": "画面下部固定",
+          "font_color": "#FFD700",
+          "edge_color": "#000000"
+        }
+      ]
+    },
+    "audio_and_speech": {
+      "narration": {
+        "script": "最後に、視聴者との『共感共有』を促し、コメント欄での議論を自然に誘導していました。この成功事例から、動画の質を高めるヒントが見えましたね。あなたも、次の一歩を踏み出してみませんか？",
+        "reading_guide": "まとめは落ち着いて、CTAは明るく問いかけるように。",
+        "voice_tone": "穏やかで信頼感のあるトーンから、最後は前向きで促すようなトーン。",
+        "speech_speed": "標準からやや速め",
+        "pauses": "「誘導していました。」の後、少し間。「見えましたね。」の後、少し間。"
+      },
+      "audio_cue": [
+        {
+          "time": "22.2s",
+          "effect": "優しい開始音"
+        },
+        {
+          "time": "26.0s",
+          "effect": "ポジティブな解決音"
+        },
+        {
+          "time": "28.5s",
+          "effect": "明るい終わりを示す効果音"
+        }
+      ]
+    }
+  }
 ]
-```

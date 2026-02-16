@@ -31,6 +31,8 @@ def get_ai_response(user_input):
             create_video_prompt(user_input)
             re_value = json.dumps(st.session_state.jsonList[1], indent=2, ensure_ascii=False)
         case 2:
+            create_image()
+        case 3:
             create_video()
             re_value = "動画作成完了！"
     # 再生から戻ってきたプロンプトに対しての後処理
@@ -50,6 +52,8 @@ def setup_app():
         st.session_state.log = []
     if "jsonList" not in st.session_state:
         st.session_state.jsonList = []
+    if "imagesList" not in st.session_state:
+        st.session_state.imagesList = []
 
 def display_chat_history():
     # 過去の会話を表示
@@ -76,10 +80,6 @@ def handle_chat():
     if st.button("会話クリア", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
-
-
-
-
 
 #------------------------------------------------------------------------------------------
 # -------------------
@@ -112,16 +112,21 @@ def safe_generate_content(prompt, retries=8):
 # -----------------------------
 # VEO 動画生成 安全版
 # -----------------------------
-def safe_generate_video(prompt, current_video, retries=12):
+def safe_generate_video(prompt, imagesList = None, current_video = None, retries=12):
     for attempt in range(retries):
         try:
             config = types.GenerateVideosConfig(
                 number_of_videos=1,
                 resolution="720p"
             )
+            # 入力内容の構成
+            # テキストプロンプトを先頭にし、その後に画像配列を展開して追加します
+            contents = prompt.strip()
+            
             return genai_client.models.generate_videos(
                 model=veo_model,
-                prompt=prompt.strip(),
+                prompt=contents,
+                images=imagesList,
                 video=current_video,
                 config=config
             )
@@ -160,107 +165,121 @@ def perplexiy_serch(user_prompt):
     # ----------------------------------------
     # Perplexity：トレンド調査プロンプト生成
     # ----------------------------------------
-    response = client.chat.completions.create(
-        model="sonar",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"""
-            あなたは「バズるトークリール」を専門に分析するプロフェッショナルなリサーチエージェントです。
-            現在、日本国内で再生数が急上昇している実在の「トークリール（顔出し、または音声メインのショート動画）」を1つ選び、その成功要因を以下のJSON形式で分析してください。
+    prompt= f"""
+    あなたは「バズるトークリール」を専門に分析するプロフェッショナルなリサーチエージェントです。
+    現在、日本国内で再生数が急上昇している実在の「トークリール（顔出し、または音声メインのショート動画）」を1つ選び、その成功要因を以下のJSON形式で分析してください。
 
-            【分析の重点事項】
-            1. トーク特化型のフック：冒頭1〜3秒で「何を言ったか」だけでなく「どう見せたか」を重視すること。
-            2. 視聴維持の編集：テロップのタイミング、カットの速さ、BGMの有無など、トークを飽きさせない工夫。
-            3. トレンド性：2026年現在の日本における「共感」や「議論」の種をどう扱っているか。
-            4. 値は全て日本語で出力すること。
+    【分析の重点事項】
+    1. トーク特化型のフック：冒頭1〜3秒で「何を言ったか」だけでなく「どう見せたか」を重視すること。
+    2. 視聴維持の編集：テロップのタイミング、カットの速さ、BGMの有無など、トークを飽きさせない工夫。
+    3. トレンド性：2026年現在の日本における「共感」や「議論」の種をどう扱っているか。
+    4. 値は全て日本語で出力すること。
 
-            【出力時のJSONフォーマット】
-            {re_format}
+    【出力時のJSONフォーマット】
+    {re_format}
 
-            ※解説や前置きは一切不要です。指定したJSON形式のみで出力してください。
-            ※ユーザーからの追加要望：{user_prompt}
-            """}
-        ],
-    )
-    st.session_state.jsonList.append(response.choices[0].message.content)
-    return response.choices[0].message.content
+    ※解説や前置きは一切不要です。指定したJSON形式のみで出力してください。
+    ※ユーザーからの追加要望：{user_prompt}
+    """
+    # st.session_state.jsonList.append(response.choices[0].message.content)
+    # return response.choices[0].message.content
+    # 指数バックオフ付き API 呼び出し
+    response = safe_generate_content(prompt)
+    st.session_state.jsonList.append(response.text)
+    return response.text
 
 # -------------------------------
 #  動画台本作成
 # -------------------------------
 def create_video_prompt(user_input):
     outputPromptFormat = {
-    "sequence_control": {
-        "segment_id": "",
-        "total_segments": "",
-        "current_time_range": "",
-        "is_last_segment": "",
-        "continuation_token": ""
-    },
-    "visual_instruction": {
-        "prompt_en": "",
-        "start_frame_description": "",
-        "end_frame_description": "",
-        "camera_movement": "",
-        "subject_consistency": ""
-    },
-    "text_and_display_settings": {
-        "on_screen_display": {
-        "display_text": "",
-        "display_type": "",
-        "design_notes": "",
-        "language_priority": ""
+    "global_video_config": {
+        "project_id": "ep01_scene01",
+        "character_assets": {
+        "character_id": "hero_001",
+        "name": "Elen",
+        "appearance_fixed": "Silver hair in a braid, blue eyes, wearing a white leather tunic with gold embroidery",
+        "visual_seed": 123456 # 全セグメントでこの数値を固定することで絵柄を安定させる
         },
-        "caption_overlay": [
-        {
-            "text": "",
-            "display_timing": "",
-            "style": "",
-            "position": "",
-            "font_color": "",
-            "edge_color": ""
+        "environment_fixed": {
+        "location": "Ancient forest at sunset",
+        "background_elements": "Giant glowing mushrooms, mossy stone pillars",
+        "lighting": "Golden hour, warm rim light"
         }
-        ]
     },
-    "audio_and_speech": {
-        "narration": {
-        "script": "",
-        "reading_guide": "",
-        "voice_tone": "",
-        "speech_speed": "",
-        "pauses": ""
+    "segments": [
+        {
+        "sequence_control": {
+            "segment_id": "",
+            "total_segments": "",
+            "current_time_range": "",
+            "is_last_segment": "",
+            "continuation_token": ""
         },
-        "audio_cue": [
-        {"time": "", "effect": ""}
-        ]
-    }
+        "visual_instruction": {
+            "prompt_en": "",
+            "start_frame_description": "",
+            "end_frame_description": "",
+            "camera_movement": "",
+            "subject_consistency": ""
+        },
+        "text_and_display_settings": {
+            "on_screen_display": {
+            "display_text": "",
+            "display_type": "",
+            "design_notes": "",
+            "language_priority": ""
+            },
+            "caption_overlay": [
+            {
+                "text": "",
+                "display_timing": "",
+                "style": "",
+                "position": "",
+                "font_color": "",
+                "edge_color": ""
+            }
+            ]
+        },
+        "audio_and_speech": {
+            "narration": {
+            "script": "",
+            "reading_guide": "",
+            "voice_tone": "",
+            "speech_speed": "",
+            "pauses": ""
+            },
+            "audio_cue": [
+            {"time": "", "effect": ""}
+            ]
+        }
+        }
+    ]
     }
 
     # 最初のメタプロンプト
     prompt = f"""
     あなたはプロのAI動画ディレクターです。
-    下記の入力データ（JSON）に基づき、**ビジネス向けトークリール動画（縦型SNS向けのナレーションベース動画）**を生成するための詳細な台本プロンプトを構成してください。
+    下記の入力データ（JSON）に基づき、**ビジネス向けトークリール動画（縦型SNS向けのナレーションベース動画）**を生成するための詳細な台本データを構成してください。
 
-    業務ルール
-    1.動画全体の長さは最大30秒とします。
-    2.動画生成AIの制約上、1回につき最大8秒しか生成できないため、全体を「4つ程度のセグメント（パート）」に分割してください。
-    3.各セグメントごとに、下記のJSONフォーマットに準拠したデータを作成してください。
-    4.最終的な出力は、それらすべてのセグメントを格納した「1つのJSON配列（リスト形式）」としてください。
-    5.日本人向け動画のため、テキストや説明は必ず日本語で作成してください。
-    6.公序良俗に反する表現や暴力的な表現は厳禁です。
-    7.特定のインフルエンサーや実在するユーザーアカウント名など、個人を特定する内容は入れないでください。
-    8.  本プロンプトはアバターや人物映像を使用しない、背景とテキスト・ナレーションのみで構成されたトークリール専用の台本にしてください。
-    9.以下の点を特に重視して構成してください：
-    　・ナレーションが視聴者に直接語りかけるような自然で親しみやすい口調にする
-    　・背景映像はナレーション内容に合わせて変化させる（例：場面転換・色味・雰囲気）
-    　・各セグメントには「ナレーション台詞」「背景演出」「テロップ案」を含める
-    　・会話テンポを意識して、1文は短く区切る
-    　・冒頭で視聴者の興味を引く一言（フック）を入れる
+    ### 業務ルール
+    1. 動画全体の長さは最大30秒とします。
+    2. 動画生成AIの制約上、全体を「4つ程度のセグメント（パート）」に分割してください。
+    3. 出力は必ず、**1つの親オブジェクト内に 'global_video_config'（共通設定）を1つ、'segments'（各シーンの配列）を複数格納した単一のJSON形式**としてください。
+    4. 各セグメントには「ナレーション台詞」「背景演出」「テロップ案」を含めてください。
+    5. 日本人向け動画のため、テキストや説明は必ず日本語で作成してください。
+    6. 公序良俗に反する表現や、個人を特定する内容は厳禁です。
+    7. 本プロンプトはアバターや人物映像を使用しない、背景とテキスト・ナレーションのみで構成されたトークリール専用の台本にしてください。
+    8. 以下の点を特に重視してください：
+    　・ナレーションが視聴者に直接語りかける自然な口調（フックを意識）
+    　・背景映像はナレーション内容に合わせ、視覚的飽きがこないよう変化させる
+    　・会話テンポを意識し、1文は短く区切る
 
-    ### 出力フォーマット（必ずこの「JSON配列」の形式を守ること）
+    ### 出力フォーマット（厳守）
+    ※必ず以下の構造を持つ「1つのJSONオブジェクト」として出力してください。`segments`は必ずリスト形式にしてください。
     {json.dumps(outputPromptFormat, indent=4, ensure_ascii=False)}
-    
-    ↓入力json
+
+    ### 入力データ（JSON）
     {st.session_state.jsonList[0]}
     """
 
@@ -582,7 +601,78 @@ def invoke_shotstack(video_file_path, text_prompt):
             break
         
         time.sleep(5)
+
+# 画像生成関数    
+def create_image():
+    prompt_json = st.session_state.jsonList[-1]
+    if len(prompt_json) <= 1:
+        print("プロンプトが存在しないため、処理終了。")
+        return
     
+    # --- 修正後のコード ---
+    for m in genai_client.models.list():
+        # モデル名を取得（m.name が一般的ですが、念のため getattr を使用）
+        model_name = getattr(m, 'name', '')
+        # モデル名を表示（デバッグ用）
+        print(f"チェック中のモデル: {model_name}")
+        # 名前の中に 'imagen' が含まれているか、
+        # または直接 'imagen-3' を指定して画像生成を試みる
+        if 'imagen' in model_name.lower():
+            print(f"画像生成モデルを見つけました: {model_name}")
+            # ここで処理を続行
+    
+    current_image = None
+    print("jsonのおおもとの中身は：")
+    print(prompt_json)
+    cleaned_json = prompt_json.replace("```json", "").replace("```", "").strip()
+    data = json.loads(cleaned_json)
+    # セクションごとの画像配列を格納
+    section_images = []
+    for json_word in data:
+        prompt = F"""あなたはプロの画像作成エージェントです。
+        以下のJSONは動画台本の1セクションです。このセクションから**トークリール用基礎画像を4枚作成**してください。
+        **作成する4枚の役割：**
+        1. 導入ショット（セクション全体の雰囲気を表現）
+        2. メインコンテンツ（台本の核心部分を視覚化）  
+        3. 補足・ディテール（具体例や補強要素）
+        4. 締め・コールトゥアクション（次の展開や視聴者アクションを促す）
+
+        **動画仕様：縦型トークリール（9:16）、30秒、SNS向け**
+        - 人物は正面・アップ気味で話し手に見える構図
+        - 背景はシンプルでテキスト重ね可能  
+        - 明るくクリアな照明、プロフェッショナルな雰囲気
+
+        ↓JSON台本
+        {json.dumps(json_word, indent=4, ensure_ascii=False)}
+
+        **画像のみを出力してください。番号や説明文は一切入れず、4つの画像生成プロンプトのみを連続で記述してください。**
+        1. [導入ショット用プロンプトのみ]
+        2. [メインコンテンツ用プロンプトのみ]  
+        3. [補足用プロンプトのみ]
+        4. [締め用プロンプトのみ]
+        """      
+        response = safe_generate_content(prompt)
+
+        # 最低限のクールダウン
+        time.sleep(5)
+        
+        image_response = genai_client.models.generate_images(
+            model='models/imagen-4.0-fast-generate-001',
+            prompt=response.text,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+            )
+        )
+        # このセクションの4枚を配列に格納
+        section_images_list = []
+        # 4枚すべてを表示
+        for i, img in enumerate(image_response.generated_images):
+            img_data = img.image.image_bytes
+            st.image(img_data, caption=f"Generated Image {i+1}", use_container_width=True)
+            # 画像オブジェクトを配列に追加（Gemini用）
+            section_images_list.append(img.image)
+        section_images.append(section_images_list)
+    st.session_state.imagesList = section_images
 
 # -------------------------------
 #  動画生成パート（3分割）
@@ -675,7 +765,7 @@ def create_video():
         
         try:
             # 1. 動画生成リクエストの送信
-            operation = safe_generate_video(prompt_text, current_video)
+            operation = safe_generate_video(prompt_text, st.session_state.imagesList, current_video)
             op_display_id = getattr(operation, 'name', "processing")
             # 2. Operation IDを文字列として確実に取得
             while not operation.done:
