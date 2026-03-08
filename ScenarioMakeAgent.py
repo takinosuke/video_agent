@@ -5,56 +5,50 @@ import time
 import json
 import random
 import os
-import ScenarioMakeAgent
 
-def identifyUserNeeds(user_input, history_text):
-    context = ""
-    for msg in history_text:
-        role = "ユーザー" if msg["role"] == "user" else "AI"
-        context += f"{role}: {msg['content']}\n"
+def MakeScenario(analysisText):
+    # context = ""
+    # for msg in history_text:
+    #     role = "ユーザー" if msg["role"] == "user" else "AI"
+    #     context += f"{role}: {msg['content']}\n"
     
     system_instruction = """
     # Role
-    あなたはInstagramのトレンド調査を専門とする「超効率型トレンド分析・プランナー」です。
-    ユーザーの手間を最小限にし、最大4回のラリーで、AIが分析を実行するための【トレンド分析調査設計書】を完成させるのが任務です。
+    あなたは、InstagramやTikTokで数百万再生を連発する、超一流のショート動画クリエイター兼ディレクターです。
+    提供された「動画分析データ」を元に、その成功パターン（勝てるロジック）を完全に継承した、新しいオリジナル動画の台本を作成してください。
 
-    # Goal
-    ユーザーの断片的な回答から、今どのジャンルの「勝ちパターン」を抽出したいのかを「推測」して選択肢を提示し、最終的な【トレンド分析調査設計書】への合意を得てください。
+    # Task
+    1. 新しい動画のテーマを、分析結果の「改善・差別化のヒント」に基づいて1つ選定してください。
+    2. そのテーマに沿って、15〜30秒のショート動画台本を制作してください。
+    3. 台本は、以下の「構成フォーマット」に従って詳細に記述してください。
 
-    # Conditions & Constraints
-    - **ステータス管理（最重要）**:
-        - ユーザーの合意が得られるまでは、回答の末尾に必ず **[STATUS:INCOMPLETE]** を付与。
-        - 合意後は、ヒアリング内容を「トレンド分析調査設計書」にまとめ、末尾に必ず **[STATUS:COMPLETE]** を付与。
-    - **ヒアリング手法（スマート・プッシュ）**:
-        - ユーザーに「考えてもらう」のではなく、「選んでもらう」形式を徹底。
-        - 回答から「おそらくこの界隈の、こういう要素を分析したいのですね？」と推測し、「A：〇〇、B：△△、C：その他」のように提示する。
-    - **ラリー回数**: 最大4回以内でのクローズを目指す。
-    - **出力形式**: 日本語のみ。自然なチャット形式。
+    # Constraints (厳守事項)
+    分析結果に基づき、以下の数値をロジックに組み込むこと：
+    - **冒頭フック:** 1.5秒以内に視覚的衝撃を与え、10-30文字のテロップで「知らなきゃ損」と思わせる。
+    - **テンポ:** 10秒間に3〜5カットの切り替え。1要素につき2〜5秒で完結させる。
+    - **視覚階層:** 重要情報のテロップはデザインとフォントの強弱を明確にする。
+    - **音響戦略:** 効果音（SE）のピークをBGMより高く設定し、盛り上がり（Swell）を作る。
+    - **視聴者維持:** Before/Afterの対比を明確にし、最後に「保存」や「コメント」を促す仕掛けを入れる。
 
-    # Interaction Flow (Efficiency Model)
-    1. **第1ラリー（調査対象ジャンル・型）**: 
-        分析したいジャンルを聞きつつ、その業界で現在ベンチマークすべき代表的な「動画の型（例：ショートVlog、知識図解、ビフォーアフター等）」を推測で提示。
-    2. **第2ラリー（分析フォーカス）**: 
-        第1回答から「特にどの要素の流行り（例：編集リズム、フォントの傾向、BGMの選定、構図）」を重点的に解析すべきか推測提示。
-    3. **第3ラリー（バズの指標・KPI）**: 
-        「視聴維持率が高そうなフック」を分析したいのか、「保存を促すまとめ方」を分析したいのか、調査の核心を確認。
-    4. **第4ラリー（最終確認・合意）**: 
-        これまでの内容を【トレンド分析調査設計書】として提示し、合意を得る。
+    # Output Format
+    ## 1. コンセプト案
+    - **ターゲット:** - **選定したテーマ:** - **視聴者が得るベネフィット:** ## 2. 制作絵コンテ（タイムライン形式）
+    | 秒数 | 映像（背景・動き） | テロップ内容（配置/演出） | 音響（BGM/SE） | ナレーション |
+    | :--- | :--- | :--- | :--- | :--- |
+    | 0-3s | [例]鮮やかな実演映像 | 【15文字以内のフック】 | アップテンポ開始/衝撃音 | 「これ、マジで凄いです」 |
+    | ... | ... | ... | ... | ... |
 
-    # Output Style
-    - 「〜といった傾向を深掘りしたい、という感じでしょうか？」という推測を交えた提案。
-    - ユーザーは「Aです」「2番に近い」と答えるだけで分析要件が固まるように設計する。
+    ## 3. 編集への指示書
+    - **色味・トーン:** - **フォント・アニメーション:** - **視聴者参加型の仕掛け（問いかけ内容）:** # Response
+    日本語で、具体的かつプロフェッショナルなトーンで出力してください。
     """
     
     prompt = f"""
     {system_instruction}
 
     ---
-    ### これまでの対話
-    {context}
-
-    ### システムからの指示
-    上記の対話を踏まえ、次にユーザーに返すべきメッセージを生成してください。
+    # Input Data: 動画分析結果
+    {analysisText}
     """
     
     for attempt in range(2):
@@ -65,16 +59,8 @@ def identifyUserNeeds(user_input, history_text):
                 contents=prompt
             )
             raw_text = response.text
-            #st.write(f"出力物：{raw_text}")
-            if "[STATUS:COMPLETE]" in raw_text:
-                status = 1
-                # ユーザーに見せるメッセージからフラグを除去
-                clean_text = raw_text.replace("[STATUS:COMPLETE]", "").strip()
-                st.success("✅ 要件の合意が完了しました。JSON生成フェーズへ移行します。")
-            else:
-                clean_text = raw_text.replace("[STATUS:INCOMPLETE]", "").strip()
                 
-            return [clean_text, status]
+            return raw_text
         
         except Exception as e:
             wait = (2 ** attempt) + random.uniform(0, 1)
@@ -192,13 +178,14 @@ def captureMarketVibe(history_text):
             )
             requestresponse_text = response.text
             st.write(f"出力物：{requestresponse_text}")                
-            return [requestresponse_text]
+            return requestresponse_text
         
         except Exception as e:
             wait = (2 ** attempt) + random.uniform(0, 1)
             time.sleep(wait)
             if attempt == 4:
-                return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"                       
+                return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"            
+           
     
     return "AIの応答を生成できませんでした。"
 
