@@ -192,7 +192,7 @@ def captureMarketVibe(history_text):
             )
             requestresponse_text = response.text
             st.write(f"出力物：{requestresponse_text}")                
-            return [requestresponse_text]
+            return [requestresponse_text, 1]
         
         except Exception as e:
             wait = (2 ** attempt) + random.uniform(0, 1)
@@ -211,11 +211,13 @@ def setup_app():
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "transitionState" not in st.session_state:
-        st.session_state.transitionState = -1
+        st.session_state.transitionState = 0
     if "log" not in st.session_state:
         st.session_state.log = []
     if "jsonList" not in st.session_state:
         st.session_state.jsonList = []
+    if "analysisText" not in st.session_state:
+        st.session_state.analysisText = ""
 
 def display_chat_history():
     # 過去の会話を表示
@@ -234,15 +236,26 @@ def handle_chat():
         # AI返信を生成・表示
         with st.chat_message("assistant"):
             with st.spinner("AIが考え中..."):
-                response = identifyUserNeeds(prompt, st.session_state.messages)
-                response_text = response[0]
-                if(response[1] == 0):
-                    st.markdown(response_text)
-                    st.session_state.messages.append({"role": "assistant", "content": response_text})
-                else:
-                    captureMarketVibe(st.session_state.messages)
-                    st.markdown("処理終了。")
-                    st.stop()
+                ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
+                if st.session_state.transitionState == 0:
+                    response = identifyUserNeeds(prompt, st.session_state.messages)
+                    response_text = response[0]
+                    analysis_tate_flag = 0
+                    ## ユーザー対話セクションで正常終了なら戻り値が配列で返ってくる。
+                    if len(response_text) > 1:
+                        analysis_tate_flag += response_text[1]
+                    ## ユーザー対話セクションにてAIが終了と判断した場合には配列2番目に１が返される
+                    ## 1の場合はjson作成と分析を行う。
+                    if analysis_tate_flag == 0:
+                        st.markdown(response_text)
+                        st.session_state.messages.append({"role": "assistant", "content": response_text})
+                    elif analysis_tate_flag == 1:
+                        market_response = captureMarketVibe(st.session_state.messages)
+                        if len(response) > 1:
+                            st.session_state.transitionState += 1
+                            st.session_state.analysisText = market_response[0]
+                elif st.session_state.transitionState == 1:
+                    ScenarioMakeAgent.MakeScenario(st.session_state.analysisText)
 
     # クリアボタン
     if st.button("会話クリア", use_container_width=True):
