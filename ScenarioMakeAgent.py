@@ -177,7 +177,7 @@ def captureMarketVibe(history_text):
                 contents=prompt
             )
             requestresponse_text = response.text
-            st.write(f"出力物：{requestresponse_text}")                
+            st.write(f"分析結果：{requestresponse_text}")                
             return requestresponse_text
         
         except Exception as e:
@@ -239,6 +239,6 @@ def handle_chat():
 load_dotenv()
 googleKey = os.getenv('GOOGLE_API_KEY')
 genai_client = genai.Client(api_key=googleKey)
-setup_app()
-display_chat_history()
-handle_chat()
+# setup_app()
+# display_chat_history()
+# handle_chat()
