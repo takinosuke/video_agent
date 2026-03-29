@@ -8,6 +8,7 @@ import os
 import ScenarioMakeAgent
 from apify_client import ApifyClient
 import re
+import requests
 
 #ユーザー聞き取り関数
 def identifyUserNeeds(user_input, history_text):
@@ -53,33 +54,30 @@ def identifyUserNeeds(user_input, history_text):
     # 1. 記号（ [ ] ' " ）をすべて除去して純粋なテキストにする
     clean_text = re.sub(r"[\[\]'\"“”‘’]", "", raw_text)
     # 2. カンマ、改行、スペースのどれかで区切って、個別のワードに分ける
-    # これで ['おもしろ動画', 'Vlog'] のようなリストになります
+    # これで ['おもしろ動画', 'Vlog'] のようなリストになります  
     keyword_list = [word.strip() for word in re.split(r'[,\n\s]+', clean_text) if word.strip()]
 
     st.write(f"抽出後：{keyword_list}")
 
-
-    # リストが確実に「Pythonのリスト型」であることを保証
-    keywords = list(keyword_list)
+    keywords = [f"https://www.instagram.com/explore/tags/{key}/" for key in keyword_list]
+    st.write(f"{keywords}")
 
     run_input = {
         "searchType": "hashtag",        # モード指定を先頭に
-        "hashtags": keywords,           # 抽出した ['投資', '節約術', '資産形成']
-        "resultsType": "posts",
+        "directUrls": keywords,           # 抽出した ['投資', '節約術', '資産形成']
+        "resultsType": "reels",
         "searchLimit": 5,
-        "resultsLimit": 4,
-        "expandPlaces": False,          # 不要な処理をオフにして軽量化
-        "expandUser": False,            # 不要な処理をオフにして軽量化
-        "proxyConfiguration": {
-            "useApifyProxy": True
-        }
+        "onlyPostsNewerThan": "2024-01-01",
+        "resultsLimit": 1,
+        "proxyConfiguration": { "useApifyProxy": True, "apifyProxyGroups": ["RESIDENTIAL"] }
     }
     
-    run = client.actor("apify/instagram-hashtag-scraper").call(run_input=run_input)
+    run = client.actor("apify/instagram-scraper").call(run_input=run_input)
 
     # 結果のリストを作成
     video_list = []
     url_list = []
+    counter = 0
     for item in client.dataset(run["defaultDatasetId"]).iterate_items():
         video_list.append({
             "url": item.get("url"),
@@ -87,24 +85,41 @@ def identifyUserNeeds(user_input, history_text):
             "caption": item.get("caption"),
             "likes": item.get("likesCount")
         })
-        url_list.append(item.get("url"))
+        st.write(f"videUrlは：{item.get("videoUrl")}")
+        st.write(f"urlは：{item.get("url")}")
+        st.write(f"typeは：{item.get("type")}")
+        # 1. 動画を一時的に保存
+        video_data = requests.get(item.get("videoUrl")).content
+        with open(f"temp_video_{counter}.mp4", "wb") as f:
+            f.write(video_data)
+        url_list.append(f"temp_video_{counter}.mp4")
     
     ## url毎に特徴を取得する。
-    raw_text = []    
+    raw_text = []
     for item in url_list:
+        with open(item, "rb") as f:
+            # 動画をアップロード（Apifyで落としたファイル）
+            video_file = genai_client.files.upload(file=f, config={'mime_type': 'video/mp4'})
+        
+        # アップロード直後
+        print("動画を処理中...")
+        while video_file.state.name == "PROCESSING":
+            time.sleep(2)
+            video_file = genai_client.files.get(name=video_file.name)
+
+        if video_file.state.name == "FAILED":
+            st.write("失敗しました。")
+            raise ValueError("Video processing failed.")
+
         prompt = f"""
                 あなたはプロの動画分析クリエイターです。
-                下記のurlからこの動画が流行る理由をさまざまな確度から推測し、
-                特徴を教えてください。
-
-                # 対象url
-                {item}
+                送付した動画が流行る理由をさまざまな角度から推測し、特徴を教えてください。
         """        
         for attempt in range(5):
             try:           
                 response = genai_client.models.generate_content(
                     model='gemini-2.5-flash',
-                    contents=prompt
+                    contents=[prompt, video_file]
                 )
                 st.write(response.text)
                 raw_text.append(response.text)
@@ -113,6 +128,10 @@ def identifyUserNeeds(user_input, history_text):
             except Exception as e:
                 wait = (2 ** attempt) + random.uniform(0, 1)
                 time.sleep(wait)
+                st.write("gemini問い合わせに失敗。")
+                st.error(f"--- 試行 {attempt+1} 回目のエラー詳細 ---")
+                st.warning(f"エラー種別: {type(e).__name__}")
+                st.code(str(e)) # エラーメッセージ本体
                 if attempt == 4:
                     #return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
                     break

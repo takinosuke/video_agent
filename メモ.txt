@@ -1,0 +1,41 @@
+from apify_client import ApifyClient
+
+def get_talk_reels(genre_keyword):
+    client = ApifyClient("<YOUR_API_TOKEN>")
+
+    # ユーザーのキーワードに「トーク系」を連想させるワードを付与
+    search_query = f"{genre_keyword} 解説" 
+
+    run_input = {
+        "search": search_query,
+        "searchType": "hashtag",   # ハッシュタグが最も「人気投稿」を拾いやすい
+        "resultsType": "reels",    # リール動画に限定
+        "resultsLimit": 10,        # 10件
+        "proxyConfiguration": {
+            "useApifyProxy": True,
+            "apifyProxyGroups": ["RESIDENTIAL"] # 住宅用プロキシで安定性を確保
+        }
+    }
+
+    # Actorの実行
+    print(f"「{genre_keyword}」のトークリールを探しています...")
+    run = client.actor("apify/instagram-scraper").call(run_input=run_input)
+
+    # 結果のリストを作成
+    video_list = []
+    for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+        video_list.append({
+            "url": item.get("url"),
+            "video_url": item.get("videoUrl"),
+            "caption": item.get("caption"),
+            "likes": item.get("likesCount")
+        })
+    
+    return video_list
+
+# 実行例
+user_request = "AI ツール" # ユーザーからの要望
+results = get_talk_reels(user_request)
+
+for i, video in enumerate(results, 1):
+    print(f"{i}: {video['url']} (Likes: {video['likes']})")
