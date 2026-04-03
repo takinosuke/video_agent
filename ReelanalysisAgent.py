@@ -162,10 +162,43 @@ def identifyUserNeeds(user_input, history_text):
                 break
     return 0
 
-def setup_app(): 
+def show_form_page():
+    st.title("入力フォーム")
+    st.write("情報を入力してください。")
+    
+    # テキスト入力
+    user_val = st.text_input("名前を入力してください", value=st.session_state.user_input)
+    
+    if st.button("既存の画面へ遷移"):
+        if user_val:
+            # 値をセッションに保存して遷移
+            st.session_state.user_input = user_val
+            st.session_state.page = 'main'
+            st.rerun() # 画面を再描画して切り替える
+        else:
+            st.error("名前を入力してください！")
+
+def show_main_page():
     # ページ設定
     st.set_page_config(page_title="AIチャット", page_icon="🤖")
     st.title("🤖 AIチャット")
+    
+    # フォームから引き継いだ値を表示
+    st.success(f"こんにちは、{st.session_state.user_input} さん！")
+    
+    st.write("ここは元々あったメインコンテンツのエリアです。")
+    
+    # 戻るボタン（任意）
+    if st.button("フォームに戻る"):
+        st.session_state.page = 'form'
+        st.rerun()
+
+
+def setup_app():
+    if st.session_state.page == 'form':
+        show_form_page()
+    elif st.session_state.page == 'main':
+        show_main_page()     
 
     # チャット履歴をセッション状態で保持（初回のみ実行）
     if "messages" not in st.session_state:
