@@ -85,9 +85,9 @@ def identifyUserNeeds(user_input, history_text):
             "caption": item.get("caption"),
             "likes": item.get("likesCount")
         })
-        st.write(f"videUrlは：{item.get("videoUrl")}")
-        st.write(f"urlは：{item.get("url")}")
-        st.write(f"typeは：{item.get("type")}")
+        st.write(f"videUrlは：{item.get('videoUrl')}")
+        st.write(f"urlは：{item.get('url')}")
+        st.write(f"typeは：{item.get('type')}")
         # 1. 動画を一時的に保存
         video_data = requests.get(item.get("videoUrl")).content
         with open(f"temp_video_{counter}.mp4", "wb") as f:
@@ -162,63 +162,36 @@ def identifyUserNeeds(user_input, history_text):
                 break
     return 0
 
+
+
 def show_form_page():
-    st.title("入力フォーム")
-    st.write("情報を入力してください。")
+    st.title("要件入力フォーム")
+    st.write("動画分析設定")
+    serch_type = st.selectbox("検索するコンテンツのの種類を選んでください。", ["リール", "投稿データ", "コメント"])
+    serch_num =st.text_input("再生回数は何回以上の動画に絞り込みますか。")
+    serch_genre = st.text_input("分析したい動画のジャンルを入力してください。")
     
-    # テキスト入力
-    user_val = st.text_input("名前を入力してください", value=st.session_state.user_input)
+    st.write("台本設定")    
+    senario_genre = st.text_input("作成する台本のジャンルを入力。")
+    senario_stringnum = st.text_input("台本の文字数を入力。")
+    senario_pattern = st.text_input("台本のパターン数を入力。")
     
     if st.button("既存の画面へ遷移"):
-        if user_val:
-            # 値をセッションに保存して遷移
-            st.session_state.user_input = user_val
-            st.session_state.page = 'main'
-            st.rerun() # 画面を再描画して切り替える
-        else:
-            st.error("名前を入力してください！")
+        st.session_state.analysis_contants = serch_type
+        st.session_state.analysis_numbers = serch_num
+        st.session_state.analysis_genre = serch_genre
+        st.session_state.scenario_genre = senario_genre
+        st.session_state.scenario_stringnum = senario_stringnum
+        st.session_state.scenario_pattern = senario_pattern
+        
+        st.session_state.page = 'main'
+        st.rerun() # 画面を再描画して切り替える)
 
 def show_main_page():
     # ページ設定
     st.set_page_config(page_title="AIチャット", page_icon="🤖")
     st.title("🤖 AIチャット")
-    
-    # フォームから引き継いだ値を表示
-    st.success(f"こんにちは、{st.session_state.user_input} さん！")
-    
-    st.write("ここは元々あったメインコンテンツのエリアです。")
-    
-    # 戻るボタン（任意）
-    if st.button("フォームに戻る"):
-        st.session_state.page = 'form'
-        st.rerun()
-
-
-def setup_app():
-    if st.session_state.page == 'form':
-        show_form_page()
-    elif st.session_state.page == 'main':
-        show_main_page()     
-
-    # チャット履歴をセッション状態で保持（初回のみ実行）
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "transitionState" not in st.session_state:
-        st.session_state.transitionState = 0
-    if "log" not in st.session_state:
-        st.session_state.log = []
-    if "jsonList" not in st.session_state:
-        st.session_state.jsonList = []
-    if "analysisText" not in st.session_state:
-        st.session_state.analysisText = ""
-
-def display_chat_history():
-    # 過去の会話を表示
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-def handle_chat():    
+        
     try:
         # ユーザー入力フォーム
         if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
@@ -231,20 +204,65 @@ def handle_chat():
             with st.chat_message("assistant"):
                 with st.spinner("AIが考え中..."):
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
-                    #if st.session_state.transitionState == 0:
                     response = identifyUserNeeds(prompt, st.session_state.messages)
                     st.write(response)
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
             st.session_state.messages = []
             st.rerun()
+        # 戻るボタン（任意）
+        if st.button("フォームに戻る"):
+            st.session_state.page = 'form'
+            st.rerun()
     except Exception as e:
         st.write(e)
         st.stop()
+
+
+def setup_app():
+    # チャット履歴をセッション状態で保持（初回のみ実行）
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    if "transitionState" not in st.session_state:
+        st.session_state.transitionState = 0
+    if "log" not in st.session_state:
+        st.session_state.log = []
+    if "jsonList" not in st.session_state:
+        st.session_state.jsonList = []
+    if "analysisText" not in st.session_state:
+        st.session_state.analysisText = ""
+    # セッション状態の初期化
+    if 'page' not in st.session_state:
+        st.session_state.page = 'form'
+    if 'user_input' not in st.session_state:
+        st.session_state.user_input = ""
+    if 'analysis_contants' not in st.session_state:
+        st.session_state.analysis_contants = ""
+    if 'analysis_numbers' not in st.session_state:
+        st.session_state.analysis_numbers = ""
+    if 'analysis_genre' not in st.session_state:
+        st.session_state.analysis_genre = ""
+    if 'scenario_genre' not in st.session_state:
+        st.session_state.scenario_genre = ""
+    if 'scenario_stringnum' not in st.session_state:
+        st.session_state.scenario_stringnum = ""
+    if 'scenario_pattern' not in st.session_state:
+        st.session_state.scenario_pattern = ""
+    
+        
+    if st.session_state.page == 'form':
+        show_form_page()
+    elif st.session_state.page == 'main':
+        show_main_page()
+
+def display_chat_history():
+    # 過去の会話を表示
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
 load_dotenv()
 googleKey = os.getenv('GOOGLE_API_KEY')
 genai_client = genai.Client(api_key=googleKey)
 setup_app()
 display_chat_history()
-handle_chat()
