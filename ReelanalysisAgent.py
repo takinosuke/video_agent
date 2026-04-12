@@ -10,15 +10,19 @@ from apify_client import ApifyClient
 import re
 import requests
 
+# ページ設定
+st.set_page_config(page_title="AIチャット", page_icon="🤖")
+st.title("🤖 AIチャット")
+
 #ユーザー聞き取り関数
-def identifyUserNeeds(user_input, history_text):
-    apifyApiKey = os.getenv('APIFY_API')
+def identifyUserNeeds(type, play_num, analysis_genre):
+    apifyApiKey = st.secrets['APIFY_API']
     client = ApifyClient(apifyApiKey)
 
-    context = ""
-    for msg in history_text:
-        role = "ユーザー" if msg["role"] == "user" else "AI"
-        context += f"{role}: {msg['content']}\n"
+    # context = ""
+    # for msg in history_text:
+    #     role = "ユーザー" if msg["role"] == "user" else "AI"
+    #     context += f"{role}: {msg['content']}\n"
     
     prompt = f"""
         Instagramの動画検索用キーワードを生成してください。
@@ -31,7 +35,7 @@ def identifyUserNeeds(user_input, history_text):
         4. 1行で出力すること。
 
         # ユーザーの要望
-        {context}
+        {analysis_genre}
     """
     raw_text = ""
     for attempt in range(2):
@@ -65,37 +69,50 @@ def identifyUserNeeds(user_input, history_text):
     run_input = {
         "searchType": "hashtag",        # モード指定を先頭に
         "directUrls": keywords,           # 抽出した ['投資', '節約術', '資産形成']
-        "resultsType": "reels",
+        "resultsType": type,
         "searchLimit": 5,
         "onlyPostsNewerThan": "2024-01-01",
-        "resultsLimit": 1,
+        "resultsLimit": 4,
         "proxyConfiguration": { "useApifyProxy": True, "apifyProxyGroups": ["RESIDENTIAL"] }
     }
     
     run = client.actor("apify/instagram-scraper").call(run_input=run_input)
 
     # 結果のリストを作成
-    video_list = []
+    #video_list = []
     url_list = []
-    counter = 0
+    counter = -1
+    st.info("動画取得機能開始")
     for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-        video_list.append({
-            "url": item.get("url"),
-            "video_url": item.get("videoUrl"),
-            "caption": item.get("caption"),
-            "likes": item.get("likesCount")
-        })
+        counter += 1
+        # video_list.append({
+        #     "url": item.get("url"),
+        #     "video_url": item.get("videoUrl"),
+        #     "caption": item.get("caption"),
+        #     "likes": item.get("likesCount")
+        # })
         st.write(f"videUrlは：{item.get('videoUrl')}")
         st.write(f"urlは：{item.get('url')}")
         st.write(f"typeは：{item.get('type')}")
-        # 1. 動画を一時的に保存
-        video_data = requests.get(item.get("videoUrl")).content
-        with open(f"temp_video_{counter}.mp4", "wb") as f:
-            f.write(video_data)
-        url_list.append(f"temp_video_{counter}.mp4")
+        st.write(f"回数は：{item.get('videoPlayCount')}")
+        st.write(f"回数は：{item.get('videoViewCount')}")
+        st.write(f"回数は：{item.get('viewCount')}")
+        st.write(f"回数は：{item.get('playCount')}")
+        views = item.get("videoPlayCount") or item.get("videoViewCount") or 10000
+        st.write(f"視聴回数は：{views}")
+        if views >= int(play_num):
+            # 1. 動画を一時的に保存
+            video_data = requests.get(item.get("videoUrl")).content
+            with open(f"temp_video_{counter}.mp4", "wb") as f:
+                f.write(video_data)
+            url_list.append(f"temp_video_{counter}.mp4")
     
     ## url毎に特徴を取得する。
     raw_text = []
+    if len(url_list) == 0:
+        st.write("取得した動画が0件のため、処理終了")
+        return 0
+    st.info("動画解析開始")
     for item in url_list:
         with open(item, "rb") as f:
             # 動画をアップロード（Apifyで落としたファイル）
@@ -137,6 +154,7 @@ def identifyUserNeeds(user_input, history_text):
                     break
 
     #全体の特徴を出す。
+    st.info("全体分析開始")
     prompt = f"""
                 あなたは特徴量分析のプロです。
                 下記は最近の流行の動画の特徴を1つ1つ分析した文章になります。
@@ -165,34 +183,40 @@ def identifyUserNeeds(user_input, history_text):
 
 
 def show_form_page():
-    st.title("要件入力フォーム")
-    st.write("動画分析設定")
-    serch_type = st.selectbox("検索するコンテンツのの種類を選んでください。", ["リール", "投稿データ", "コメント"])
-    serch_num =st.text_input("再生回数は何回以上の動画に絞り込みますか。")
-    serch_genre = st.text_input("分析したい動画のジャンルを入力してください。")
-    
-    st.write("台本設定")    
-    senario_genre = st.text_input("作成する台本のジャンルを入力。")
-    senario_stringnum = st.text_input("台本の文字数を入力。")
-    senario_pattern = st.text_input("台本のパターン数を入力。")
-    
-    if st.button("既存の画面へ遷移"):
-        st.session_state.analysis_contants = serch_type
-        st.session_state.analysis_numbers = serch_num
-        st.session_state.analysis_genre = serch_genre
-        st.session_state.scenario_genre = senario_genre
-        st.session_state.scenario_stringnum = senario_stringnum
-        st.session_state.scenario_pattern = senario_pattern
+    placeholder = st.empty()
+    with placeholder.container():
+        st.title("要件入力フォーム")
+        st.write("動画分析設定")
+        serch_type = st.selectbox("検索するコンテンツのの種類を選んでください。", ["reels", "投稿データ", "コメント"])
+        serch_num =st.text_input("再生回数は何回以上の動画に絞り込みますか。")
+        serch_genre = st.text_input("分析したい動画のジャンルを入力してください。")
         
-        st.session_state.page = 'main'
-        st.rerun() # 画面を再描画して切り替える)
+        st.write("台本設定")    
+        senario_genre = st.text_input("作成する台本のジャンルを入力。")
+        senario_stringnum = st.text_input("台本の文字数を入力。")
+        senario_pattern = st.text_input("台本のパターン数を入力。")
+        
+        if st.button("既存の画面へ遷移"):
+            st.session_state.analysis_contants = serch_type
+            st.session_state.analysis_numbers = serch_num
+            st.session_state.analysis_genre = serch_genre
+            st.session_state.scenario_genre = senario_genre
+            st.session_state.scenario_stringnum = senario_stringnum
+            st.session_state.scenario_pattern = senario_pattern
+            
+            st.session_state.page = 'main'
+            st.rerun() # 画面を再描画して切り替える)
 
 def show_main_page():
-    # ページ設定
-    st.set_page_config(page_title="AIチャット", page_icon="🤖")
-    st.title("🤖 AIチャット")
-        
+    container = st.chat_message("assistant")
     try:
+        # AI返信を生成・表示
+        with container:
+            with st.spinner("AIが考え中..."):
+                ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
+                response = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
+                st.write(response)
+        
         # ユーザー入力フォーム
         if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
             # ユーザー入力を追加
@@ -200,12 +224,7 @@ def show_main_page():
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 st.markdown(prompt)
 
-            # AI返信を生成・表示
-            with st.chat_message("assistant"):
-                with st.spinner("AIが考え中..."):
-                    ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
-                    response = identifyUserNeeds(prompt, st.session_state.messages)
-                    st.write(response)
+            
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
             st.session_state.messages = []
@@ -249,11 +268,15 @@ def setup_app():
     if 'scenario_pattern' not in st.session_state:
         st.session_state.scenario_pattern = ""
     
-        
-    if st.session_state.page == 'form':
-        show_form_page()
-    elif st.session_state.page == 'main':
-        show_main_page()
+    # ★ 修正ポイント：ページ全体の入れ物を作る
+    main_placeholder = st.empty()
+
+    # ★ container の中で各ページを呼び出す
+    with main_placeholder.container():
+        if st.session_state.page == 'form':
+            show_form_page()
+        elif st.session_state.page == 'main':
+            show_main_page()
 
 def display_chat_history():
     # 過去の会話を表示
@@ -261,8 +284,8 @@ def display_chat_history():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-load_dotenv()
-googleKey = os.getenv('GOOGLE_API_KEY')
+#load_dotenv()
+googleKey = st.secrets['GOOGLE_API_KEY']
 genai_client = genai.Client(api_key=googleKey)
 setup_app()
 display_chat_history()
