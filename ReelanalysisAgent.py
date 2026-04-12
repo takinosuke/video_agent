@@ -16,7 +16,7 @@ st.title("🤖 AIチャット")
 
 #ユーザー聞き取り関数
 def identifyUserNeeds(type, play_num, analysis_genre):
-    apifyApiKey = st.secrets['APIFY_API']
+    apifyApiKey = st.secrets["APIFY_API"]
     client = ApifyClient(apifyApiKey)
 
     # context = ""
@@ -45,6 +45,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
                 contents=prompt
             )
             raw_text = response.text
+            st.write(F"中身のデバッグ：{raw_text}")
             break
         
         except Exception as e:
@@ -52,8 +53,6 @@ def identifyUserNeeds(type, play_num, analysis_genre):
             time.sleep(wait)
             if attempt == 4:
                 return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
-
-    st.write(raw_text)
 
     # 1. 記号（ [ ] ' " ）をすべて除去して純粋なテキストにする
     clean_text = re.sub(r"[\[\]'\"“”‘’]", "", raw_text)
@@ -285,7 +284,7 @@ def display_chat_history():
             st.markdown(message["content"])
 
 #load_dotenv()
-googleKey = st.secrets['GOOGLE_API_KEY']
+googleKey = st.secrets["GOOGLE_API_KEY"]
 genai_client = genai.Client(api_key=googleKey)
 setup_app()
 display_chat_history()
