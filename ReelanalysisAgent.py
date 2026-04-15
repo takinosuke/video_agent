@@ -14,6 +14,90 @@ import requests
 st.set_page_config(page_title="AIチャット", page_icon="🤖")
 st.title("🤖 AIチャット")
 
+#台本作成エージェント
+def senarioAgent(input):
+    prompt = f"""
+    # 目的
+    Instagramで現在バズっている動画の特徴を反映し、指定されたジャンルで視聴者の維持率が高いショート動画の台本を{int(st.session_state.scenario_pattern)}件作成してください。
+
+    # インプット情報
+    1. 分析されたトレンドの特徴:
+    {input}
+
+    2. ターゲットジャンル: {st.session_state.scenario_genre}
+    3. 文字数目安（1本あたり）: {st.session_state.scenario_stringnum}文字程度
+    4. 作成パターン数: {int(st.session_state.scenario_pattern)}パターン
+
+    # 台本構成ルール
+    各パターン、以下の構成で作成してください。
+    - 【フック（0-3秒）】: 思わず手を止める強烈な一言 or 問いかけ
+    - 【ボディ（内容）】: テンポよく情報を伝える。1文を短く。
+    - 【オチ / CTA（最後）】: 感想を促す問いかけ or プロフィールへの誘導
+
+    # 出力形式
+    以下のフォーマットで出力してください。
+
+    ---
+    ### パターン1：[パターンのコンセプト]
+    【動画の全体イメージ】
+    （BGMの雰囲気、カット割りの頻度など）
+
+    【台本テキスト】
+    （ここに指定文字数で台本を記述）
+
+    【編集のポイント】
+    （トレンド分析に基づいた、文字入れのタイミングやエフェクトの指示）
+    ---
+    （指定されたパターン数分繰り返し）
+    """
+    for attempt in range(2):
+        try:
+            status = 0
+            response = genai_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            requestresponse_text = response.text
+            st.write(f"分析結果：{requestresponse_text}")                
+            return requestresponse_text
+        
+        except Exception as e:
+            wait = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(wait)
+            if attempt == 4:
+                return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"            
+           
+    return "AIの応答を生成できませんでした。"
+
+#yes/noジャッジエージェント
+def jadgeAgent(userImput):
+    prompt = f"""
+        下記のユーザーインプットが肯定(はい)しているか、否定(いいえ)しているかを判定してほしいです。
+        肯定の場合は"YES"を返してください。
+        否定の場合は"NO"を返してください。
+        返答は上記どちらかの文字列のみにしてください。
+
+        # ユーザーの入力
+        {userImput}
+    """
+    raw_text = ""
+    for attempt in range(2):
+        try:           
+            response = genai_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            raw_text = response.text
+            st.session_state.messages.append(raw_text)
+            break
+        
+        except Exception as e:
+            wait = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(wait)
+            if attempt == 4:
+                return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
+    return raw_text
+
 #ユーザー聞き取り関数
 def identifyUserNeeds(type, play_num, analysis_genre):
     apifyApiKey = st.secrets["APIFY_API"]
@@ -155,20 +239,22 @@ def identifyUserNeeds(type, play_num, analysis_genre):
     #全体の特徴を出す。
     st.info("全体分析開始")
     prompt = f"""
-                あなたは特徴量分析のプロです。
-                下記は最近の流行の動画の特徴を1つ1つ分析した文章になります。
-                この文章から、最近の流行りの動画にはどのような傾向やギミックがあるのかをまとめてください。
+    あなたは特徴量分析のプロです。
+    下記は最近の流行の動画の特徴を1つ1つ分析した文章になります。
+    この文章から、最近の流行りの動画にはどのような傾向やギミックがあるのかをまとめてください。
 
-                # 動画分析文
-                {raw_text}
-    """        
+    # 動画分析文
+    {raw_text}
+    """
+    response = ""
     for attempt in range(5):
         try:           
             response = genai_client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt
             )
-            st.write(response.text)
+            #st.write(response.text)
+            st.session_state.messages.append(response.text)
             break
         
         except Exception as e:
@@ -177,9 +263,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
             if attempt == 4:
                 #return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
                 break
-    return 0
-
-
+    return response
 
 def show_form_page():
     placeholder = st.empty()
@@ -212,18 +296,30 @@ def show_main_page():
         # AI返信を生成・表示
         with container:
             with st.spinner("AIが考え中..."):
-                ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
-                response = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
-                st.write(response)
-        
-        # ユーザー入力フォーム
-        if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
-            # ユーザー入力を追加
-            with st.chat_message("user"):
-                st.session_state.messages.append({"role": "user", "content": prompt})
-                st.markdown(prompt)
-
+                if st.session_state.transitionState == 0:
+                    ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
+                    response = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
+                    st.write(f"分析結果は：{response}")
+                    st.write(f"##この分析結果で台本作成をしますか？")                    
             
+                    # ユーザー入力フォーム
+                    if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
+                        # ユーザー入力を追加
+                        with st.chat_message("user"):
+                            st.session_state.messages.append({"role": "user", "content": prompt})
+                            st.markdown(prompt)
+                            st.session_state.transitionState += 1
+                if st.session_state.transitionState == 1:
+                    re = jadgeAgent
+                    if re == "YES":
+                        response = senarioAgent
+                        st.session_state.transitionState += 1
+                    elif re == "NO":
+                        if prompt := st.chat_input("メッセージを入力してください...",key="input_2"):
+                            # ユーザー入力を追加
+                            with st.chat_message("user"):
+                                st.session_state.messages.append({"role": "user", "content": prompt})
+
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
             st.session_state.messages = []
@@ -235,7 +331,6 @@ def show_main_page():
     except Exception as e:
         st.write(e)
         st.stop()
-
 
 def setup_app():
     # チャット履歴をセッション状態で保持（初回のみ実行）
