@@ -382,4 +382,4 @@ def display_chat_history():
 googleKey = st.secrets["GOOGLE_API_KEY"]
 genai_client = genai.Client(api_key=googleKey)
 setup_app()
-display_chat_history()
+#display_chat_history()
