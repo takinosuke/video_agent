@@ -310,9 +310,11 @@ def show_main_page():
                             st.markdown(prompt)
                             st.session_state.transitionState += 1
                 if st.session_state.transitionState == 1:
+                    placeholder = st.empty()
                     re = jadgeAgent
                     if re == "YES":
                         response = senarioAgent
+                        st.write(response)
                         st.session_state.transitionState += 1
                     elif re == "NO":
                         if prompt := st.chat_input("メッセージを入力してください...",key="input_2"):
