@@ -304,23 +304,16 @@ def show_main_page():
             
                     # ユーザー入力フォーム
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
-                        # ユーザー入力を追加
-                        with st.chat_message("user"):
-                            st.session_state.messages.append({"role": "user", "content": prompt})
-                            st.markdown(prompt)
+                        re = jadgeAgent()
+                        if re == "YES":                            
                             st.session_state.transitionState += 1
+                        elif re == "NO":
+                            st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
+                        st.rerun()
                 if st.session_state.transitionState == 1:
-                    placeholder = st.empty()
-                    re = jadgeAgent
-                    if re == "YES":
-                        response = senarioAgent
-                        st.write(response)
-                        st.session_state.transitionState += 1
-                    elif re == "NO":
-                        if prompt := st.chat_input("メッセージを入力してください...",key="input_2"):
-                            # ユーザー入力を追加
-                            with st.chat_message("user"):
-                                st.session_state.messages.append({"role": "user", "content": prompt})
+                    response = senarioAgent()
+                    st.write(response)
+                    
 
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
