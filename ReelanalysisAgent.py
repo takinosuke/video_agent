@@ -293,25 +293,26 @@ def show_form_page():
 def show_main_page():
     container = st.chat_message("assistant")
     try:
+        analysis = ""
         # AI返信を生成・表示
         with container:
             with st.spinner("AIが考え中..."):
                 if st.session_state.transitionState == 0:
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
-                    response = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
-                    st.write(f"分析結果は：{response}")
+                    analysis = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
+                    st.write(f"分析結果は：{analysis}")
                     st.write(f"##この分析結果で台本作成をしますか？")                    
             
                     # ユーザー入力フォーム
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
-                        re = jadgeAgent()
+                        re = jadgeAgent(prompt)
                         if re == "YES":                            
                             st.session_state.transitionState += 1
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         st.rerun()
                 if st.session_state.transitionState == 1:
-                    response = senarioAgent()
+                    response = senarioAgent(analysis)
                     st.write(response)
                     
 
