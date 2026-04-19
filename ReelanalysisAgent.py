@@ -365,15 +365,17 @@ def show_main_page():
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
                         re = jadgeAgent(prompt)
                         if re == "YES":
-                            container = st.empty()
-                            st.rerun()
                             st.session_state.transitionState += 1
+                            st.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
                 if st.session_state.transitionState == 1:
-                    response = senarioAgent(analysis)
-                    st.write(response)
+                    with container:
+                        st.success("台本を作成します...")
+                        with st.spinner("台本執筆中..."):
+                            response = senarioAgent(analysis)
+                            st.write(response)
                     
 
         # クリアボタン
