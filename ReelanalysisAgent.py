@@ -58,7 +58,13 @@ def senarioAgent(input):
                 contents=prompt
             )
             requestresponse_text = response.text
-            st.write(f"分析結果：{requestresponse_text}")                
+            # --- トークン計測の追加 ---
+            usage = response.usage_metadata
+            st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+            st.session_state.gemini_input_token += usage.prompt_token_count
+            st.session_state.gemini_output_token += usage.candidates_token_count
+            st.session_state.gemini_total_token += usage.total_token_count
+            # -----------------------
             return requestresponse_text
         
         except Exception as e:
@@ -89,6 +95,13 @@ def jadgeAgent(userImput):
             )
             raw_text = response.text
             st.session_state.messages.append(raw_text)
+            # --- トークン計測の追加 ---
+            usage = response.usage_metadata
+            st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+            st.session_state.gemini_input_token += usage.prompt_token_count
+            st.session_state.gemini_output_token += usage.candidates_token_count
+            st.session_state.gemini_total_token += usage.total_token_count
+            # -----------------------
             break
         
         except Exception as e:
@@ -130,6 +143,13 @@ def identifyUserNeeds(type, play_num, analysis_genre):
             )
             raw_text = response.text
             st.write(F"中身のデバッグ：{raw_text}")
+            # --- トークン計測の追加 ---
+            usage = response.usage_metadata
+            st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+            st.session_state.gemini_input_token += usage.prompt_token_count
+            st.session_state.gemini_output_token += usage.candidates_token_count
+            st.session_state.gemini_total_token += usage.total_token_count
+            # -----------------------
             break
         
         except Exception as e:
@@ -184,6 +204,14 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         views = item.get("videoPlayCount") or item.get("videoViewCount") or 10000
         st.write(f"視聴回数は：{views}")
         if views >= int(play_num):
+            #消費トークンの取得
+            run_details = client.run(run["id"]).get()
+            # 消費された計算リソース(CU)を取得
+            usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
+            # Streamlitのセッション状態に加算
+            st.session_state.apify_token += usage_cu
+            st.write(f"今回のApify消費リソース: {usage_cu} CU")
+            
             # 1. 動画を一時的に保存
             video_data = requests.get(item.get("videoUrl")).content
             with open(f"temp_video_{counter}.mp4", "wb") as f:
@@ -254,6 +282,13 @@ def identifyUserNeeds(type, play_num, analysis_genre):
                 )
                 st.write(response.text)
                 raw_text.append(response.text)
+                # --- トークン計測の追加 ---
+                usage = response.usage_metadata
+                st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+                st.session_state.gemini_input_token += usage.prompt_token_count
+                st.session_state.gemini_output_token += usage.candidates_token_count
+                st.session_state.gemini_total_token += usage.total_token_count
+                # -----------------------
                 break
             
             except Exception as e:
@@ -313,6 +348,13 @@ def identifyUserNeeds(type, play_num, analysis_genre):
             )
             #st.write(response.text)
             st.session_state.messages.append(response.text)
+            # --- トークン計測の追加 ---
+            usage = response.usage_metadata
+            st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+            st.session_state.gemini_input_token += usage.prompt_token_count
+            st.session_state.gemini_output_token += usage.candidates_token_count
+            st.session_state.gemini_total_token += usage.total_token_count
+            # -----------------------
             break
         
         except Exception as e:
@@ -366,7 +408,7 @@ def show_main_page():
                         re = jadgeAgent(prompt)
                         if re == "YES":
                             st.session_state.transitionState += 1
-                            st.rerun()
+                            container.empty()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
@@ -377,7 +419,6 @@ def show_main_page():
                             response = senarioAgent(analysis)
                             st.write(response)
                     
-
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
             st.session_state.messages = []
@@ -402,6 +443,18 @@ def setup_app():
         st.session_state.jsonList = []
     if "analysisText" not in st.session_state:
         st.session_state.analysisText = ""
+    # 入力トークン用
+    if "gemini_input_token" not in st.session_state:
+        st.session_state.gemini_input_token = ""
+    # 出力トークン用
+    if "gemini_output_token" not in st.session_state:
+        st.session_state.gemini_output_token = ""
+    # 合計トークン用
+    if "gemini_total_token" not in st.session_state:
+        st.session_state.gemini_total_token = ""
+    # apifyトークン用
+    if "apify_token" not in st.session_state:
+        st.session_state.apify_token = ""
     # セッション状態の初期化
     if 'page' not in st.session_state:
         st.session_state.page = 'form'
