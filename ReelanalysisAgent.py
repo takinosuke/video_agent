@@ -445,16 +445,16 @@ def setup_app():
         st.session_state.analysisText = ""
     # 入力トークン用
     if "gemini_input_token" not in st.session_state:
-        st.session_state.gemini_input_token = ""
+        st.session_state.gemini_input_token = 0
     # 出力トークン用
     if "gemini_output_token" not in st.session_state:
-        st.session_state.gemini_output_token = ""
+        st.session_state.gemini_output_token = 0
     # 合計トークン用
     if "gemini_total_token" not in st.session_state:
-        st.session_state.gemini_total_token = ""
+        st.session_state.gemini_total_token = 0
     # apifyトークン用
     if "apify_token" not in st.session_state:
-        st.session_state.apify_token = ""
+        st.session_state.apify_token = 0
     # セッション状態の初期化
     if 'page' not in st.session_state:
         st.session_state.page = 'form'
