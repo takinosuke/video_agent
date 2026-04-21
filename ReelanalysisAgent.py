@@ -205,7 +205,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         st.write(f"視聴回数は：{views}")
         #消費トークンの取得
         run_handle = client.run(run["id"])
-        run_details = run_handle.wait_for_finish(timeout_secs=300)
+        run_details = run_handle.wait_for_finish(wait_secs=300)
         # 消費された計算リソース(CU)を取得
         usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
         # Streamlitのセッション状態に加算
