@@ -206,8 +206,15 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         #消費トークンの取得
         run_handle = client.run(run["id"])
         run_details = run_handle.wait_for_finish(wait_secs=300)
+        
         # 消費された計算リソース(CU)を取得
         usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
+        # 2. 一部のアクターで使用される実際の課金額（USDなど）
+        usage_usd = run_details.get("usage", {}).get("totalUsd", 0)
+        # 3. アクター内で明示的に定義された「アドオン」的な課金
+        usage_extra = run_details.get("usage", {}).get("extraBilling", 0)
+        st.write(usage_usd)
+        st.write(usage_extra)
         # Streamlitのセッション状態に加算
         st.session_state.apify_token += usage_cu
         st.write(f"今回のApify消費リソース: {usage_cu} CU")
