@@ -203,15 +203,15 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         st.write(f"回数は：{item.get('playCount')}")
         views = item.get("videoPlayCount") or item.get("videoViewCount") or 10000
         st.write(f"視聴回数は：{views}")
-        if views >= int(play_num):
-            #消費トークンの取得
-            run_details = client.run(run["id"]).get()
-            # 消費された計算リソース(CU)を取得
-            usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
-            # Streamlitのセッション状態に加算
-            st.session_state.apify_token += usage_cu
-            st.write(f"今回のApify消費リソース: {usage_cu} CU")
-            
+        #消費トークンの取得
+        run_handle = client.run(run["id"])
+        run_details = run_handle.wait_for_finish(timeout_secs=300)
+        # 消費された計算リソース(CU)を取得
+        usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
+        # Streamlitのセッション状態に加算
+        st.session_state.apify_token += usage_cu
+        st.write(f"今回のApify消費リソース: {usage_cu} CU")
+        if views >= int(play_num):            
             # 1. 動画を一時的に保存
             video_data = requests.get(item.get("videoUrl")).content
             with open(f"temp_video_{counter}.mp4", "wb") as f:
