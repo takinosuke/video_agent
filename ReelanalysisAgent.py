@@ -215,6 +215,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         usage_extra = run_details.get("usage", {}).get("extraBilling", 0)
         st.write(usage_usd)
         st.write(usage_extra)
+        st.json(run_details.get("usage"))
         # Streamlitのセッション状態に加算
         st.session_state.apify_token += usage_cu
         st.write(f"今回のApify消費リソース: {usage_cu} CU")
