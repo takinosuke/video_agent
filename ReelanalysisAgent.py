@@ -400,6 +400,7 @@ def show_main_page():
                 if st.session_state.transitionState == 0:
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
                     analysis = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
+                    st.session_state.analysisText = analysis
                     st.write(f"分析結果は：{analysis}")
                     st.write(f"##この分析結果で台本作成をしますか？")                    
             
@@ -416,7 +417,7 @@ def show_main_page():
                     with container:
                         st.success("台本を作成します...")
                         with st.spinner("台本執筆中..."):
-                            response = senarioAgent(analysis)
+                            response = senarioAgent(st.session_state.analysisText)
                             st.write(response)
                     
         # クリアボタン
