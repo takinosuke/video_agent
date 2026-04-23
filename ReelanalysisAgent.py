@@ -142,7 +142,8 @@ def identifyUserNeeds(type, play_num, analysis_genre):
                 contents=prompt
             )
             raw_text = response.text
-            st.write(F"中身のデバッグ：{raw_text}")
+            #st.write(F"中身のデバッグ：{raw_text}")
+            print(F"中身のデバッグ：{raw_text}")
             # --- トークン計測の追加 ---
             usage = response.usage_metadata
             st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
@@ -164,10 +165,10 @@ def identifyUserNeeds(type, play_num, analysis_genre):
     # これで ['おもしろ動画', 'Vlog'] のようなリストになります  
     keyword_list = [word.strip() for word in re.split(r'[,\n\s]+', clean_text) if word.strip()]
 
-    st.write(f"抽出後：{keyword_list}")
+    print(f"抽出後：{keyword_list}")
 
     keywords = [f"https://www.instagram.com/explore/tags/{key}/" for key in keyword_list]
-    st.write(f"{keywords}")
+    print(f"{keywords}")
 
     run_input = {
         "searchType": "hashtag",        # モード指定を先頭に
@@ -194,15 +195,15 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         #     "caption": item.get("caption"),
         #     "likes": item.get("likesCount")
         # })
-        st.write(f"videUrlは：{item.get('videoUrl')}")
-        st.write(f"urlは：{item.get('url')}")
-        st.write(f"typeは：{item.get('type')}")
-        st.write(f"回数は：{item.get('videoPlayCount')}")
-        st.write(f"回数は：{item.get('videoViewCount')}")
-        st.write(f"回数は：{item.get('viewCount')}")
-        st.write(f"回数は：{item.get('playCount')}")
+        print(f"videUrlは：{item.get('videoUrl')}")
+        print(f"urlは：{item.get('url')}")
+        print(f"typeは：{item.get('type')}")
+        print(f"回数は：{item.get('videoPlayCount')}")
+        print(f"回数は：{item.get('videoViewCount')}")
+        print(f"回数は：{item.get('viewCount')}")
+        print(f"回数は：{item.get('playCount')}")
         views = item.get("videoPlayCount") or item.get("videoViewCount") or 10000
-        st.write(f"視聴回数は：{views}")
+        print(f"視聴回数は：{views}")
         #消費トークンの取得
         run_handle = client.run(run["id"])
         run_details = run_handle.wait_for_finish(wait_secs=300)
@@ -213,8 +214,8 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         usage_usd = run_details.get("usage", {}).get("totalUsd", 0)
         # 3. アクター内で明示的に定義された「アドオン」的な課金
         usage_extra = run_details.get("usage", {}).get("extraBilling", 0)
-        st.write(usage_usd)
-        st.write(usage_extra)
+        print(usage_usd)
+        print(usage_extra)
         st.json(run_details.get("usage"))
         # Streamlitのセッション状態に加算
         st.session_state.apify_token += usage_cu
@@ -229,7 +230,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
     ## url毎に特徴を取得する。
     raw_text = []
     if len(url_list) == 0:
-        st.write("取得した動画が0件のため、処理終了")
+        print("取得した動画が0件のため、処理終了")
         return 0
     st.info("動画解析開始")
     for item in url_list:
@@ -288,7 +289,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
                     model='gemini-2.5-flash',
                     contents=[prompt, video_file]
                 )
-                st.write(response.text)
+                print(response.text)
                 raw_text.append(response.text)
                 # --- トークン計測の追加 ---
                 usage = response.usage_metadata
