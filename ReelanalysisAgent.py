@@ -208,6 +208,8 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         run_handle = client.run(run["id"])
         run_details = run_handle.wait_for_finish(wait_secs=300)
         
+        time.sleep(30)
+        run_details = client.run(run["id"]).get()
         # 消費された計算リソース(CU)を取得
         usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
         # 2. 一部のアクターで使用される実際の課金額（USDなど）
