@@ -419,6 +419,7 @@ def show_main_page():
                         if re == "YES":
                             st.session_state.transitionState += 1
                             container.empty()
+                            container.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
