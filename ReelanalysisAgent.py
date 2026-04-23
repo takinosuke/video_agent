@@ -216,8 +216,10 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         usage_usd = run_details.get("usage", {}).get("totalChargeUsd", 0)
         # 3. アクター内で明示的に定義された「アドオン」的な課金
         usage_extra = run_details.get("usage", {}).get("extraBilling", 0)
+        usage_ori = run_details.get("stats", {}).get("computeUnits", 0)
         st.write(usage_usd)
         st.write(usage_extra)
+        st.write(usage_ori)
         st.json(run_details.get("usage"))
         # Streamlitのセッション状態に加算
         st.session_state.apify_token += usage_cu
