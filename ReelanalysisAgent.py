@@ -406,20 +406,20 @@ def show_main_page():
                     st.write(f"{analysis}")
                     st.session_state.transitionState += 1
                     st.write(f"この分析結果で台本作成をしますか？")
-                    prompt = st.chat_input("メッセージを入力してください...", key="input_1")
-                    if prompt:
-                        st.session_state.log = prompt
+                    st.rerun() # 画面を再描画して切り替える)
+                    
                 elif st.session_state.transitionState == 1:
                     # ユーザー入力フォーム
-                    st.write("ユーザー入力解析中")
-                    container.empty()
-                    re = jadgeAgent(st.session_state.log)
-                    if re == "YES":
-                        st.session_state.transitionState += 1
-                        st.rerun()
-                    elif re == "NO":
-                        st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
-                        st.session_state.transitionState = 0
+                    if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
+                        st.write("ユーザー入力解析中")
+                        container.empty()
+                        re = jadgeAgent(prompt)
+                        if re == "YES":
+                            st.session_state.transitionState += 1
+                            st.rerun()
+                        elif re == "NO":
+                            st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
+                            st.session_state.transitionState = 0
                         
                 elif st.session_state.transitionState == 2:
                     contant = st.chat_message("sinario")
