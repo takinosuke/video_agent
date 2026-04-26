@@ -401,14 +401,14 @@ def show_main_page():
                 if st.session_state.transitionState == 0:
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
                     analysis = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
-                    st.session_state.analysisText = analysis
-                    st.write(f"分析結果は：")
-                    st.write(f"{analysis}")
+                    st.session_state.analysisText = analysis          
                     st.session_state.transitionState += 1
-                    st.write(f"この分析結果で台本作成をしますか？")
                     st.rerun() # 画面を再描画して切り替える)
                     
                 elif st.session_state.transitionState == 1:
+                    st.write(f"分析結果は：")
+                    st.write(f"{st.session_state.analysisText}")
+                    st.write(f"この分析結果で台本作成をしますか？")
                     # ユーザー入力フォーム
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
                         st.write("ユーザー入力解析中")
@@ -448,7 +448,7 @@ def setup_app():
     if "transitionState" not in st.session_state:
         st.session_state.transitionState = 0
     if "log" not in st.session_state:
-        st.session_state.log = []
+        st.session_state.log = ""
     if "jsonList" not in st.session_state:
         st.session_state.jsonList = []
     if "analysisText" not in st.session_state:
