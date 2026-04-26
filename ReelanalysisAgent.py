@@ -406,7 +406,8 @@ def show_main_page():
                     st.write(f"{analysis}")
                     st.session_state.transitionState += 1
                     st.write(f"この分析結果で台本作成をしますか？")
-                    if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
+                    prompt = st.chat_input("メッセージを入力してください...", key="input_1")
+                    if prompt:
                         st.session_state.log = prompt
                 elif st.session_state.transitionState == 1:
                     # ユーザー入力フォーム
