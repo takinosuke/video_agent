@@ -207,9 +207,6 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         #消費トークンの取得
         run_handle = client.run(run["id"])
         run_details = run_handle.wait_for_finish(wait_secs=300)
-        
-        time.sleep(30)
-        run_details = client.run(run["id"]).get()
         # 消費された計算リソース(CU)を取得
         usage_ori = run_details.get("stats", {}).get("computeUnits", 0)
         st.write(usage_ori)
@@ -414,13 +411,13 @@ def show_main_page():
                         re = jadgeAgent(prompt)
                         if re == "YES":
                             st.session_state.transitionState += 1
+                            container.empty()
                             container.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
                 if st.session_state.transitionState == 1:
                     with container:
-                        container.empty()
                         st.success("台本を作成します...")
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
