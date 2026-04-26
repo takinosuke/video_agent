@@ -408,11 +408,13 @@ def show_main_page():
             
                     # ユーザー入力フォーム
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
+                        st.write("ユーザー入力解析中")
                         re = jadgeAgent(prompt)
                         if re == "YES":
+                            container.empty()
                             st.session_state.transitionState += 1
                             container.empty()
-                            container.rerun()
+                            st.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
