@@ -211,19 +211,11 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         time.sleep(30)
         run_details = client.run(run["id"]).get()
         # 消費された計算リソース(CU)を取得
-        usage_cu = run_details.get("usage", {}).get("computeUnits", 0)
-        # 2. 一部のアクターで使用される実際の課金額（USDなど）
-        usage_usd = run_details.get("usage", {}).get("totalChargeUsd", 0)
-        # 3. アクター内で明示的に定義された「アドオン」的な課金
-        usage_extra = run_details.get("usage", {}).get("extraBilling", 0)
         usage_ori = run_details.get("stats", {}).get("computeUnits", 0)
-        st.write(usage_usd)
-        st.write(usage_extra)
         st.write(usage_ori)
-        st.json(run_details.get("usage"))
         # Streamlitのセッション状態に加算
-        st.session_state.apify_token += usage_cu
-        st.write(f"今回のApify消費リソース: {usage_cu} CU")
+        st.session_state.apify_token += usage_ori
+        print(f"今回のApify消費リソース: {usage_ori} CU")
         if views >= int(play_num):            
             # 1. 動画を一時的に保存
             video_data = requests.get(item.get("videoUrl")).content
@@ -422,13 +414,13 @@ def show_main_page():
                         re = jadgeAgent(prompt)
                         if re == "YES":
                             st.session_state.transitionState += 1
-                            container.empty()
                             container.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
                 if st.session_state.transitionState == 1:
                     with container:
+                        container.empty()
                         st.success("台本を作成します...")
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
