@@ -232,7 +232,6 @@ def identifyUserNeeds(type, play_num, analysis_genre):
             video_file = genai_client.files.upload(file=f, config={'mime_type': 'video/mp4'})
         
         # アップロード直後
-        st.write("動画を処理中...")
         while video_file.state.name == "PROCESSING":
             time.sleep(2)
             video_file = genai_client.files.get(name=video_file.name)
@@ -403,9 +402,11 @@ def show_main_page():
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
                     analysis = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
                     st.session_state.analysisText = analysis
-                    st.write(f"分析結果は：{analysis}")
-                    st.write(f"##この分析結果で台本作成をしますか？")                    
-            
+                    st.write(f"分析結果は：")
+                    st.write(f"{analysis}")
+                    st.session_state.transitionState += 1
+                    st.write(f"この分析結果で台本作成をしますか？")                    
+                elif st.session_state.transitionState == 1:
                     # ユーザー入力フォーム
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
                         st.write("ユーザー入力解析中")
@@ -416,8 +417,9 @@ def show_main_page():
                             st.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
+                            st.session_state.transitionState = 0
                         
-                if st.session_state.transitionState == 1:
+                elif st.session_state.transitionState == 2:
                     contant = st.chat_message("sinario")
                     with contant:
                         st.success("台本を作成します...")
