@@ -232,7 +232,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
             video_file = genai_client.files.upload(file=f, config={'mime_type': 'video/mp4'})
         
         # アップロード直後
-        print("動画を処理中...")
+        st.write("動画を処理中...")
         while video_file.state.name == "PROCESSING":
             time.sleep(2)
             video_file = genai_client.files.get(name=video_file.name)
