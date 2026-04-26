@@ -409,17 +409,17 @@ def show_main_page():
                     # ユーザー入力フォーム
                     if prompt := st.chat_input("メッセージを入力してください...",key="input_1"):
                         st.write("ユーザー入力解析中")
+                        container.empty()
                         re = jadgeAgent(prompt)
                         if re == "YES":
-                            container.empty()
                             st.session_state.transitionState += 1
-                            container.empty()
                             st.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
                         
                 if st.session_state.transitionState == 1:
-                    with container:
+                    contant = st.chat_message("sinario")
+                    with contant:
                         st.success("台本を作成します...")
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
