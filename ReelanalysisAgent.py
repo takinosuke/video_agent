@@ -18,37 +18,45 @@ st.title("🤖 AIチャット")
 def senarioAgent(input):
     prompt = f"""
     # 目的
-    Instagramで現在バズっている動画の特徴を反映し、指定されたジャンルで視聴者の維持率が高いショート動画の台本を{int(st.session_state.scenario_pattern)}件作成してください。
+    Instagramの最新トレンド（アルゴリズム・編集スタイル）を網羅し、視聴維持率を最大化させるショート動画の台本を {int(st.session_state.scenario_pattern)} 件作成してください。
+    特に、最初の3秒で離脱させない「強烈な引き」と、最後まで飽きさせない「0.5秒単位の画面構成」を意識してください。
 
     # インプット情報
     1. 分析されたトレンドの特徴:
     {input}
 
     2. ターゲットジャンル: {st.session_state.scenario_genre}
-    3. 文字数目安（1本あたり）: {st.session_state.scenario_stringnum}文字程度
-    4. 作成パターン数: {int(st.session_state.scenario_pattern)}パターン
+    3. 作成パターン数: {int(st.session_state.scenario_pattern)} パターン
 
-    # 台本構成ルール
-    各パターン、以下の構成で作成してください。
-    - 【フック（0-3秒）】: 思わず手を止める強烈な一言 or 問いかけ
-    - 【ボディ（内容）】: テンポよく情報を伝える。1文を短く。
-    - 【オチ / CTA（最後）】: 感想を促す問いかけ or プロフィールへの誘導
+    # 台本構成・演出ルール
+    各台本は以下の「秒数指定タイムライン」形式で作成してください。
+    1. 【フック（0-3s）】: 冒頭0.1秒で視覚的・聴覚的インパクトを与え、視聴者のスクロールを止める。
+    2. 【展開・ボディ（3-25s）】: 1.5秒〜2秒に一度は必ず「画角（ズーム）」や「テロップ」を切り替える。
+    3. 【結末・CTA（25-30s）】: 「保存」や「コメント」を促す具体的な仕掛け（心理的トリガー）を組み込む。
 
     # 出力形式
     以下のフォーマットで出力してください。
 
     ---
-    ### パターン1：[パターンのコンセプト]
-    【動画の全体イメージ】
-    （BGMの雰囲気、カット割りの頻度など）
+    ### パターン[番号]：[キャッチコピー的なコンセプト名]
 
-    【台本テキスト】
-    （ここに指定文字数で台本を記述）
+    【動画の全体戦略】
+    （なぜこの構成が今のトレンドに刺さるのか、狙いを一言で記述）
 
-    【編集のポイント】
-    （トレンド分析に基づいた、文字入れのタイミングやエフェクトの指示）
+    【詳細タイムライン台本】
+    | 秒数 | 音声（ナレーション/セリフ） | 映像・演出（カット割り/エフェクト） | テロップ（表示させる文字） |
+    | :--- | :--- | :--- | :--- |
+    | 00-02s | [セリフ] | [ズーム・動作・背景] | [パワーワード] |
+    | 02-05s | ... | ... | ... |
+    | 05-15s | ... | ... | ... |
+    | 15-25s | ... | ... | ... |
+    | 25-30s | ... | ... | ... |
+
+    【編集の極意（バズるための微調整）】
+    - BGMの選定: （曲調や、音ハメのタイミング）
+    - フォント・配色: （視認性の高いスタイル指定）
+    - 離脱防止の工夫: （ここをこう変えると、さらにループ率が上がるというアドバイス）
     ---
-    （指定されたパターン数分繰り返し）
     """
     for attempt in range(2):
         try:
@@ -377,7 +385,7 @@ def show_form_page():
         
         st.write("台本設定")    
         senario_genre = st.text_input("作成する台本のジャンルを入力。")
-        senario_stringnum = st.text_input("台本の文字数を入力。")
+        #senario_stringnum = st.text_input("台本の文字数を入力。")
         senario_pattern = st.text_input("台本のパターン数を入力。")
         
         if st.button("既存の画面へ遷移"):
@@ -385,7 +393,7 @@ def show_form_page():
             st.session_state.analysis_numbers = serch_num
             st.session_state.analysis_genre = serch_genre
             st.session_state.scenario_genre = senario_genre
-            st.session_state.scenario_stringnum = senario_stringnum
+            #st.session_state.scenario_stringnum = senario_stringnum
             st.session_state.scenario_pattern = senario_pattern
             
             st.session_state.page = 'main'
