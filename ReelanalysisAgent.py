@@ -9,10 +9,19 @@ import ScenarioMakeAgent
 from apify_client import ApifyClient
 import re
 import requests
+import unicodedata
 
 # ページ設定
 st.set_page_config(page_title="AIチャット", page_icon="🤖")
 st.title("🤖 AIチャット")
+
+def try_parse_method(input_string):
+    try:
+        result = unicodedata.normalize('NFKC', input_string)
+        re = int(result)
+        return re
+    except:
+        return 0
 
 #台本作成エージェント
 def senarioAgent(input):
@@ -403,11 +412,11 @@ def show_form_page():
         
         if st.button("既存の画面へ遷移"):
             st.session_state.analysis_contants = serch_type
-            st.session_state.analysis_numbers = serch_num
+            st.session_state.analysis_numbers = try_parse_method(serch_num)
             st.session_state.analysis_genre = serch_genre
             st.session_state.scenario_genre = senario_genre
             #st.session_state.scenario_stringnum = senario_stringnum
-            st.session_state.scenario_pattern = senario_pattern
+            st.session_state.scenario_pattern = try_parse_method(senario_pattern)
             
             st.session_state.page = 'main'
             st.rerun() # 画面を再描画して切り替える)
