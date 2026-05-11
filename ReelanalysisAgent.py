@@ -404,13 +404,13 @@ def show_form_page():
         st.title("要件入力フォーム")
         st.write("動画分析設定")
         serch_type = st.selectbox("検索するコンテンツのの種類を選んでください。", ["reels", "投稿データ", "コメント"])
-        serch_num =st.text_input("再生回数は何回以上の動画に絞り込みますか。")
-        serch_genre = st.text_input("分析したい動画のジャンルを入力してください。")
+        serch_num =st.text_input(label="再生回数は何回以上の動画に絞り込みますか。", placeholder="例：10000")
+        serch_genre = st.text_input(label="分析したい動画のジャンルを入力してください。", placeholder="例：エンタメ系")
         
         st.write("台本設定")    
-        senario_genre = st.text_input("作成する台本のジャンルを入力。")
+        senario_genre = st.text_input(label="作成する台本のジャンルを入力。", placeholder="例：技術系")
         #senario_stringnum = st.text_input("台本の文字数を入力。")
-        senario_pattern = st.text_input("台本のパターン数を入力。")
+        senario_pattern = st.text_input(label="台本のパターン数を入力。", placeholder=)
         
         if st.button("既存の画面へ遷移"):
             st.session_state.analysis_contants = serch_type
