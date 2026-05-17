@@ -438,7 +438,7 @@ def show_form_page():
         
         st.write("台本設定")
         senario_make = st.selectbox("台本の作成が必要かどうか。", ["作成する", "作成しない"])
-        senario_visivleFlag = (senario_make == "作成しない" and serch_visivleFlag)
+        senario_visivleFlag = (senario_make == "作成しない" or serch_visivleFlag)
         senario_genre = st.text_input(label="作成する台本のジャンルを入力。", placeholder="例：技術系", disabled =senario_visivleFlag)
         #senario_stringnum = st.text_input("台本の文字数を入力。")
         senario_pattern = st.text_input(label="台本のパターン数を入力。", placeholder="例：2", disabled =senario_visivleFlag)
