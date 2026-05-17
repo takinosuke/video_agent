@@ -10,6 +10,7 @@ from apify_client import ApifyClient
 import re
 import requests
 import unicodedata
+import google.genai.types as types
 
 # ページ設定
 st.set_page_config(page_title="AIチャット", page_icon="🤖")
@@ -22,6 +23,32 @@ def try_parse_method(input_string):
         return re
     except:
         return 0
+
+# 画像生成関数    
+def create_image():
+    prompt = F"""
+    {st.session_state.character_make}, {st.session_state.character_sex}, {st.session_state.character_tribe}, {st.session_state.character_hairstyle}, {st.session_state.character_haircolors}, {st.session_state.character_eyeshape}, {st.session_state.character_eyecolors}, {st.session_state.character_location}, {st.session_state.character_environment}, {st.session_state.character_touch}, {st.session_state.character_tone}
+    """      
+    #response = safe_generate_content(prompt)
+
+    # 最低限のクールダウン
+    time.sleep(5)
+    
+    image_response = genai_client.models.generate_images(
+        model='models/imagen-4.0-fast-generate-001',
+        prompt=prompt,
+        config=types.GenerateImagesConfig(
+            number_of_images=1,
+        )
+    )
+    # このセクションの4枚を配列に格納
+    section_images_list = []
+    # 4枚すべてを表示
+    for i, img in enumerate(image_response.generated_images):
+        img_data = img.image.image_bytes
+        st.image(img_data, caption=f"Generated Image {i+1}", use_container_width=True)
+        # 画像オブジェクトを配列に追加（Gemini用）
+        section_images_list.append(img.image)
 
 #台本作成エージェント
 def senarioAgent(input):
@@ -403,22 +430,55 @@ def show_form_page():
     with placeholder.container():
         st.title("要件入力フォーム")
         st.write("動画分析設定")
+        serch_make = st.selectbox("動画分析が必要かどうか。", ["分析する", "分析しない"])
+        serch_visivleFlag = (serch_make == "分析しない")
         serch_type = st.selectbox("検索するコンテンツのの種類を選んでください。", ["reels", "投稿データ", "コメント"])
         serch_num =st.text_input(label="再生回数は何回以上の動画に絞り込みますか。", placeholder="例：10000")
         serch_genre = st.text_input(label="分析したい動画のジャンルを入力してください。", placeholder="例：エンタメ系")
         
-        st.write("台本設定")    
-        senario_genre = st.text_input(label="作成する台本のジャンルを入力。", placeholder="例：技術系")
+        st.write("台本設定")
+        senario_make = st.selectbox("台本の作成が必要かどうか。", ["作成する", "作成しない"])
+        senario_visivleFlag = (senario_make == "作成しない" and serch_visivleFlag == True)
+        senario_genre = st.text_input(label="作成する台本のジャンルを入力。", placeholder="例：技術系", disabled =senario_visivleFlag)
         #senario_stringnum = st.text_input("台本の文字数を入力。")
-        senario_pattern = st.text_input(label="台本のパターン数を入力。", placeholder=)
+        senario_pattern = st.text_input(label="台本のパターン数を入力。", placeholder="例：2", disabled =senario_visivleFlag)
+        
+        st.write("キャラクター作成")
+        character_make = st.selectbox("キャラクターの作成が必要かどうか。", ["作成する", "作成しない"])
+        character_visivleFlag = (character_make == "作成しない")
+        character_sex = st.selectbox("キャラクターの性別を選択してください。", ["男性", "女性", "その他"], disabled = character_visivleFlag)
+        character_tribe = st.text_input(label="キャラクターの種族を入れてください。", placeholder="例：エルフ", disabled = character_visivleFlag)
+        character_hairstyle = st.text_input(label="キャラクターのヘア-スタイルを入れてください。", placeholder="例：角刈り", disabled = character_visivleFlag)
+        character_haircolors = st.text_input(label="キャラクターの髪の毛の色を入れてください。", placeholder="例：赤", disabled = character_visivleFlag)
+        character_eyeshape = st.text_input(label="キャラクターの目の特徴を入れてください。", placeholder="例：つり目", disabled = character_visivleFlag)
+        character_eyecolors = st.text_input(label="キャラクターの目の色を入れてください。", placeholder="例：青", disabled = character_visivleFlag)
+        character_location = st.text_input(label="背景を入力してください。", placeholder="例：近未来都市", disabled = character_visivleFlag)
+        character_environment = st.text_input(label="環境を入力してください。", placeholder="例：晴れた昼", disabled = character_visivleFlag)
+        character_touch = st.text_input(label="画風を入力してください。", placeholder="例：アニメ風", disabled = character_visivleFlag)
+        character_tone = st.text_input(label="全体のトーンを入力してください。", placeholder="例：明るくポップ", disabled = character_visivleFlag)
         
         if st.button("既存の画面へ遷移"):
+            st.session_state.analysis_flag = (serch_make == "分析する")
             st.session_state.analysis_contants = serch_type
             st.session_state.analysis_numbers = try_parse_method(serch_num)
             st.session_state.analysis_genre = serch_genre
+            #台本作成設定の決定
+            st.session_state.scenario_flag = (senario_make == "作成する" and st.session_state.analysis_flag)
             st.session_state.scenario_genre = senario_genre
             #st.session_state.scenario_stringnum = senario_stringnum
             st.session_state.scenario_pattern = try_parse_method(senario_pattern)
+            # キャラクター設定の決定
+            st.session_state.character_make = (character_make == "作成する")
+            st.session_state.character_sex = character_sex
+            st.session_state.character_tribe = character_tribe
+            st.session_state.character_hairstyle = character_hairstyle
+            st.session_state.character_haircolors = character_haircolors
+            st.session_state.character_eyeshape = character_eyeshape
+            st.session_state.character_eyecolors = character_eyecolors
+            st.session_state.character_location = character_location
+            st.session_state.character_environment = character_environment
+            st.session_state.character_touch = character_touch
+            st.session_state.character_tone = character_tone
             
             st.session_state.page = 'main'
             st.rerun() # 画面を再描画して切り替える)
@@ -430,14 +490,23 @@ def show_main_page():
         # AI返信を生成・表示
         with container:
             with st.spinner("AIが考え中..."):
+                # 動画分析処理
                 if st.session_state.transitionState == 0:
+                    # 入力値が”分析しない場合は次の処理へ”
+                    if st.session_state.analysis_flag == False:
+                        st.session_state.transitionState += 1
+                        st.rerun()
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
                     analysis = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
                     st.session_state.analysisText = analysis          
                     st.session_state.transitionState += 1
                     st.rerun() # 画面を再描画して切り替える)
-                    
+                # 分析結果から台本作成結果までの処理
                 elif st.session_state.transitionState == 1:
+                    # 入力にて台本作成を”作成しないにした場合は次の処理へ”
+                    if st.session_state.scenario_flag == False:
+                        st.session_state.transitionState += 2
+                        st.rerun()
                     st.write(f"分析結果は：")
                     st.write(f"{st.session_state.analysisText}")
                     st.write(f"この分析結果で台本作成をしますか？")
@@ -451,8 +520,7 @@ def show_main_page():
                             st.rerun()
                         elif re == "NO":
                             st.warning("修正が必要な場合は、要件入力フォームからやり直してください。")
-                            st.session_state.transitionState = 0
-                        
+                            st.session_state.transitionState = 0                            
                 elif st.session_state.transitionState == 2:
                     contant = st.chat_message("sinario")
                     with contant:
@@ -460,6 +528,9 @@ def show_main_page():
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
                             st.write(response)
+                # キャラクター作成部分
+                elif st.session_state.transitionState == 3:
+                    create_image()
                     
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
@@ -503,6 +574,8 @@ def setup_app():
     if 'user_input' not in st.session_state:
         st.session_state.user_input = ""
     #動画分析設定保存用
+    if 'analysis_flag' not in st.session_state:
+        st.session_state.analysis_flag = False
     if 'analysis_contants' not in st.session_state:
         st.session_state.analysis_contants = ""
     if 'analysis_numbers' not in st.session_state:
@@ -510,6 +583,8 @@ def setup_app():
     if 'analysis_genre' not in st.session_state:
         st.session_state.analysis_genre = ""
     #台本作成設定保存用
+    if 'scenario_flag' not in st.session_state:
+        st.session_state.scenario_flag = False
     if 'scenario_genre' not in st.session_state:
         st.session_state.scenario_genre = ""
     if 'scenario_stringnum' not in st.session_state:
@@ -531,6 +606,14 @@ def setup_app():
         st.session_state.character_eyeshape = ""
     if 'character_eyecolors' not in st.session_state:
         st.session_state.character_eyecolors = ""
+    if 'character_location' not in st.session_state:
+        st.session_state.character_location = ""
+    if 'character_environment' not in st.session_state:
+        st.session_state.character_environment = ""
+    if 'character_touch' not in st.session_state:
+        st.session_state.character_touch = ""
+    if 'character_tone' not in st.session_state:
+        st.session_state.character_tone = ""
     
     # ★ 修正ポイント：ページ全体の入れ物を作る
     main_placeholder = st.empty()
