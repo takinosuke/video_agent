@@ -423,7 +423,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         print(f"視聴回数は：{views}")
         #消費トークンの取得
         run_handle = client.run(run.id)
-        run_details = run_handle.wait_for_finish(wait_secs=300)
+        run_details = run_handle.wait_for_finish(timeout_secs=300)
         time.sleep(2)
         # 消費された計算リソース(CU)を取得
         usage_ori = run_details.get("stats", {}).get("computeUnits", 0)
