@@ -426,7 +426,10 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         run_details = run_handle.wait_for_finish()
         time.sleep(2)
         # 消費された計算リソース(CU)を取得
-        usage_ori = run_details.get("stats", {}).get("computeUnits", 0)
+        if run_details.stats:
+            usage_ori = run_details.stats.compute_units
+        else:
+            usage_ori = 0
         st.write(usage_ori)
         # Streamlitのセッション状態に加算
         st.session_state.apify_token += usage_ori
