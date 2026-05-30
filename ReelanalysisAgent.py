@@ -404,7 +404,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
     url_list = []
     counter = -1
     st.info("動画取得機能開始")
-    for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+    for item in client.dataset(run.default_dataset_id).iterate_items():
         counter += 1
         # video_list.append({
         #     "url": item.get("url"),
@@ -422,7 +422,7 @@ def identifyUserNeeds(type, play_num, analysis_genre):
         views = item.get("videoPlayCount") or item.get("videoViewCount") or 10000
         print(f"視聴回数は：{views}")
         #消費トークンの取得
-        run_handle = client.run(run["id"])
+        run_handle = client.run(run.id)
         run_details = run_handle.wait_for_finish(wait_secs=300)
         time.sleep(2)
         # 消費された計算リソース(CU)を取得
