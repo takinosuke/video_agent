@@ -11,6 +11,9 @@ import re
 import requests
 import unicodedata
 import google.genai.types as types
+import streamlit as st
+import cloudinary
+import cloudinary.uploader
 
 # ページ設定
 st.set_page_config(page_title="AIチャット", page_icon="🤖")
@@ -24,10 +27,177 @@ def try_parse_method(input_string):
     except:
         return 0
 
+# 動画作成関数
+def create_video():
+    cloudinary.config(
+        cloud_name = st.secrets["CLOUDINARY_NAME"],
+        api_key = st.secrets["CLOUDINARY_API_KEY"],
+        api_secret = st.secrets["CLOUDINARYSEECRET_API_KEY"],
+        secure = True # HTTPSのセキュアなURLを発行する設定
+    )
+    st.title("Cloudinary 画像アップロードテスト")
+
+    # 2. ファイルアップローダーの配置
+    #uploaded_file = st.file_uploader("画像を選択してください", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.session_state.character_image
+
+    # if uploaded_file is not None:
+    #     # アップロードされた画像を画面に表示
+    #     st.image(uploaded_file, caption="選択された画像", width=300)
+        
+    #     # アップロードボタン
+    #     if st.button("Cloudinaryにアップロード"):
+    st.info("Cloudinaryへアップロード中...")
+    
+    try:
+        # ==========================================
+        # 3. Cloudinaryへバイナリデータを直接送信
+        # ==========================================
+        # uploaded_file.getvalue() でメモリ上の生データをそのまま渡せます
+        upload_result = cloudinary.uploader.upload(
+            uploaded_file.getvalue()
+        )
+        
+        # 4. レスポンスから公開URL（直リンク）を抽出
+        # secure_url を使うことで「https://...」から始まる安全なURLが取得できます
+        public_url = upload_result.get("secure_url")
+        
+        st.success("アップロードが成功しました！")
+        st.write("---")
+        st.write("**生成された公開URL（D-IDに渡すURL）:**")
+        st.code(public_url)
+        
+        # テストとして、発行されたURLを使って画像を表示してみる
+        st.image(public_url, caption="Cloudinaryから読み込んだ画像", width=300)
+        
+    except Exception as e:
+        st.error(f"エラーが発生しました: {e}")
+    
+    did_format = """
+        {
+            "script": {
+                "type": "text",
+                "subtitles": false,
+                "provider": {
+                "type": "microsoft",
+                "voice_id": "ja-JP-NanamiNeural"
+                },
+                "input": "ここにAIアバターに喋らせたいテキストを入力します。"
+            },
+            "config": {
+                "fluent": false,
+                "pad_audio": "0.0"
+            },
+            "source_url": "https://your-storage-bucket.com/path/to/your/avatar-image.jpg"
+        }
+    """
+    prompt = f"""
+        あなたはD-ID（ディープフェイク動画生成AI）のAPI連携に精通したプロンプトエンジニアです。
+        提供された情報をもとに、D-IDの `/talks` エンドポイントへ送信するための、有効な「JSONデータのみ」を出力してください。
+
+        # 厳守事項
+        1. 出力は「純粋なJSONオブジェクト」のみとし、コードブロック（```json ... 
+        ```）や、前置き・後置きの説明テキストは一切含めないでください。
+        2. JSONのパースエラーを防ぐため、"input" 内のセリフに含まれる改行はすべて削除するか、または適切にエスケープ（\n）してください。ダブルクォーテーションが含まれる場合は必ず `\"` にエスケープしてください。
+
+        # 各項目のマッピング指示
+        - "input": 下記の「台本」のセリフ文字列をそのまま、または適切なエスケープ処理を施してセットしてください（内容や言葉遣いは絶対に変えないでください）。
+        - "source_url": 下記の「画像URL」をそのまま一言一句変えずにセットしてください。
+
+        # 入力データ
+        ### 台本
+        {st.session_state.scenario_export}
+
+        ### 画像URL
+        {public_url}
+
+        # 出力フォーマット（ベース構成）
+        {did_format} 
+    """
+    raw_text = ""
+    for attempt in range(2):
+        try:           
+            response = genai_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            raw_text = response.text
+            st.session_state.messages.append(raw_text)
+            # --- トークン計測の追加 ---
+            usage = response.usage_metadata
+            st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+            st.session_state.gemini_input_token += usage.prompt_token_count
+            st.session_state.gemini_output_token += usage.candidates_token_count
+            st.session_state.gemini_total_token += usage.total_token_count
+            # -----------------------
+            break
+        
+        except Exception as e:
+            wait = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(wait)
+            if attempt == 4:
+                return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
+    #return raw_text
+
+    DID_API_KEY = st.secrets["DID_API_KEY"]
+    # 1. 動画生成をリクエストする（POST）
+    URL_POST = "https://api.d-id.com/talks"
+    HEADERS = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": f"Basic {DID_API_KEY}"
+    }
+    PAYLOAD = raw_text
+    # --------------------------------------------------
+    # ステップ 1: 動画生成ジョブの作成
+    # --------------------------------------------------
+    print("D-ID に動画生成リクエストを送信中...")
+    response = requests.post(URL_POST, json=PAYLOAD, headers=HEADERS)
+
+    if response.status_code != 201:
+        print(f"エラーが発生しました (Status Code: {response.status_code})")
+        print(response.text)
+        exit()
+
+    res_data = response.json()
+    talk_id = res_data.get("id")
+    print(f"ジョブが作成されました。Talk ID: {talk_id}")
+
+    # --------------------------------------------------
+    # ステップ 2: 動画の生成完了を待つ（ポーリング）
+    # --------------------------------------------------
+    URL_GET = f"https://api.d-id.com/talks/{talk_id}"
+    print("動画の生成完了を待っています...")
+
+    while True:
+        get_response = requests.get(URL_GET, headers=HEADERS)
+        
+        if get_response.status_code != 200:
+            print(f"ステータス取得エラー: {get_response.text}")
+            break
+            
+        status_data = get_response.json()
+        status = status_data.get("status")
+        print(f"現在のステータス: {status}")
+        
+        if status == "done":
+            result_url = status_data.get("result_url")
+            print("\n🎉 動画の生成が完了しました！")
+            print(f"動画URL: {result_url}")
+            break
+        elif status == "error":
+            print("\n❌ 動画の生成中にエラーが発生しました。")
+            print(status_data)
+            break
+            
+        # 5秒待ってから再確認
+        time.sleep(5)
+    
+
 # 画像生成関数    
 def create_image():
     prompt = F"""
-    {st.session_state.character_make}, {st.session_state.character_sex}, {st.session_state.character_tribe}, {st.session_state.character_hairstyle}, {st.session_state.character_haircolors}, {st.session_state.character_eyeshape}, {st.session_state.character_eyecolors}, {st.session_state.character_location}, {st.session_state.character_environment}, {st.session_state.character_touch}, {st.session_state.character_tone}
+    {st.session_state.character_make}, {st.session_state.character_sex}, {st.session_state.character_tribe}, {st.session_state.character_hairstyle}, {st.session_state.character_haircolors}, {st.session_state.character_eyeshape}, {st.session_state.character_eyecolors}, {st.session_state.character_other}, {st.session_state.character_location}, {st.session_state.character_environment}, {st.session_state.character_touch}, {st.session_state.character_tone}
     """      
     #response = safe_generate_content(prompt)
 
@@ -49,6 +219,7 @@ def create_image():
         st.image(img_data, caption=f"Generated Image {i+1}", use_container_width=True)
         # 画像オブジェクトを配列に追加（Gemini用）
         section_images_list.append(img.image)
+        st.session_state.character_image.append(img.image)
 
 #台本作成エージェント
 def senarioAgent(input):
@@ -110,6 +281,7 @@ def senarioAgent(input):
             st.session_state.gemini_output_token += usage.candidates_token_count
             st.session_state.gemini_total_token += usage.total_token_count
             # -----------------------
+            st.session_state.scenario_export = requestresponse_text
             return requestresponse_text
         
         except Exception as e:
@@ -452,10 +624,17 @@ def show_form_page():
         character_haircolors = st.text_input(label="キャラクターの髪の毛の色を入れてください。", placeholder="例：赤", disabled = character_visivleFlag)
         character_eyeshape = st.text_input(label="キャラクターの目の特徴を入れてください。", placeholder="例：つり目", disabled = character_visivleFlag)
         character_eyecolors = st.text_input(label="キャラクターの目の色を入れてください。", placeholder="例：青", disabled = character_visivleFlag)
+        character_other = st.text_input(label="その他のキャラクターの特徴を入れてください。", placeholder="例：翼", disabled = character_visivleFlag)
         character_location = st.text_input(label="背景を入力してください。", placeholder="例：近未来都市", disabled = character_visivleFlag)
         character_environment = st.text_input(label="環境を入力してください。", placeholder="例：晴れた昼", disabled = character_visivleFlag)
         character_touch = st.text_input(label="画風を入力してください。", placeholder="例：アニメ風", disabled = character_visivleFlag)
         character_tone = st.text_input(label="全体のトーンを入力してください。", placeholder="例：明るくポップ", disabled = character_visivleFlag)
+        
+        st.write("動画作成")
+        video_make = st.selectbox("動画の作成が必要かどうか。", ["作成する", "作成しない"])
+        video_visivleFlag = (video_make == "作成しない")
+        video_haveCharacter = st.selectbox("キャラクター画像を持っている", ["持っている", "持っていない"], disabled = video_visivleFlag)
+        video_havesenario = st.selectbox("すでに台本を持っている", ["持っている", "持っていない"], disabled = video_visivleFlag)
         
         if st.button("既存の画面へ遷移"):
             st.session_state.analysis_flag = (serch_make == "分析する")
@@ -475,10 +654,15 @@ def show_form_page():
             st.session_state.character_haircolors = character_haircolors
             st.session_state.character_eyeshape = character_eyeshape
             st.session_state.character_eyecolors = character_eyecolors
+            st.session_state.character_other = character_other
             st.session_state.character_location = character_location
             st.session_state.character_environment = character_environment
             st.session_state.character_touch = character_touch
             st.session_state.character_tone = character_tone
+            #動画作成の決定
+            st.session_state.video_make = (video_make == "作成する")
+            st.session_state.video_haveCharacter = video_haveCharacter
+            st.session_state.video_havesenario = video_havesenario
             
             st.session_state.page = 'main'
             st.rerun() # 画面を再描画して切り替える)
@@ -530,8 +714,28 @@ def show_main_page():
                             st.write(response)
                 # キャラクター作成部分
                 elif st.session_state.transitionState == 3:
-                    create_image()
-                    
+                    if st.session_state.character_make == False:
+                        st.session_state.transitionState += 1
+                        st.rerun()
+                    with st.spinner("キャラクター生成開始します..."):                    
+                        create_image()
+                        if st.button("動画作成へ進む。"):
+                            st.session_state.transitionState += 1
+                            st.rerun()
+                # 動画作成部分
+                elif st.session_state.transitionState == 4:
+                    if st.session_state.video_make == False:
+                        st.write("30秒後、フォーム画面に戻ります。")
+                        time.sleep(30)
+                        st.session_state.page == 'form'
+                        st.rerun()
+                    if len(st.session_state.scenario_export) < 0:
+                        userInputSenario = st.text_input("台本を入力してください。")
+                    if st.session_state.character_image[0] == None:
+                        uploaded_file = st.file_uploader("画像をアップロードしてください", type=["jpg", "jpeg", "png"])
+                    if len(st.session_state.scenario_export) != 0 and st.session_state.character_image[0] != None:
+                        create_video()
+                        
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
             st.session_state.messages = []
@@ -591,6 +795,8 @@ def setup_app():
         st.session_state.scenario_stringnum = ""
     if 'scenario_pattern' not in st.session_state:
         st.session_state.scenario_pattern = ""
+    if 'scenario_export' not in st.session_state:
+        st.session_state.scenario_export = ""
     #キャラクター設定入力保存用
     if 'character_make' not in st.session_state:
         st.session_state.character_make = False
@@ -606,6 +812,8 @@ def setup_app():
         st.session_state.character_eyeshape = ""
     if 'character_eyecolors' not in st.session_state:
         st.session_state.character_eyecolors = ""
+    if 'character_other' not in st.session_state:
+        st.session_state.character_other = ""
     if 'character_location' not in st.session_state:
         st.session_state.character_location = ""
     if 'character_environment' not in st.session_state:
@@ -614,6 +822,15 @@ def setup_app():
         st.session_state.character_touch = ""
     if 'character_tone' not in st.session_state:
         st.session_state.character_tone = ""
+    if 'character_image' not in st.session_state:
+        st.session_state.character_image = []
+    # 動画部分の変数
+    if 'video_make' not in st.session_state:
+        st.session_state.video_make = ""
+    if 'video_haveCharacter' not in st.session_state:
+        st.session_state.video_haveCharacter = ""
+    if'video_havesenario' not in st.session_state:
+        st.session_state.video_havesenario = ""
     
     # ★ 修正ポイント：ページ全体の入れ物を作る
     main_placeholder = st.empty()
