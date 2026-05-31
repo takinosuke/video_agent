@@ -101,7 +101,7 @@ def create_video():
         2. JSONのパースエラーを防ぐため、"input" 内のセリフに含まれる改行はすべて削除するか、または適切にエスケープ（\n）してください。ダブルクォーテーションが含まれる場合は必ず `\"` にエスケープしてください。
 
         # 各項目のマッピング指示
-        - "input": 下記の「台本」のセリフ文字列をそのまま、または適切なエスケープ処理を施してセットしてください（内容や言葉遣いは絶対に変えないでください）。
+        - "input": 下記の「台本」のセリフ文字列をそのまま、または適切なエスケープ処理を施してセットしてください（内容や言葉遣いは絶対に変えないでください）。ただし、台本に数パターンあった場合はパターン1を使ってください。
         - "source_url": 下記の「画像URL」をそのまま一言一句変えずにセットしてください。
 
         # 入力データ
@@ -715,6 +715,10 @@ def show_main_page():
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
                             st.write(response)
+                            
+                            if st.button("キャラクタ作成へ", use_container_width=True, key="make_caractor"):
+                                st.session_state.transitionState += 1
+                                st.rerun()
                 # キャラクター作成部分
                 elif st.session_state.transitionState == 3:
                     if st.session_state.character_make == False:
