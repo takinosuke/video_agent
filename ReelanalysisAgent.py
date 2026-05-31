@@ -179,12 +179,18 @@ def create_video():
         status_data = get_response.json()
         status = status_data.get("status")
         print(f"現在のステータス: {status}")
+        st.toast(f"現在のステータス: {status}")
         
         if status == "done":
             result_url = status_data.get("result_url")
-            print("\n🎉 動画の生成が完了しました！")
-            print(f"動画URL: {result_url}")
+            
+            # 【変更】print から st.success に変更（画面に成功メッセージを出すため）
+            st.success("🎉 動画の生成が完了しました！")
+            
+            # 【追加】作成された動画を Streamlit 画面に表示するプレイヤーを追加
+            st.video(result_url)
             break
+        
         elif status == "error":
             print("\n❌ 動画の生成中にエラーが発生しました。")
             print(status_data)
