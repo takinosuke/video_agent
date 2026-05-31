@@ -736,9 +736,9 @@ def show_main_page():
                         time.sleep(30)
                         st.session_state.page == 'form'
                         st.rerun()
-                    if len(st.session_state.scenario_export) < 0:
+                    if len(st.session_state.scenario_export) <= 0:
                         userInputSenario = st.text_input("台本を入力してください。")
-                    if st.session_state.character_image == None:
+                    if st.session_state.character_image == []:
                         uploaded_file = st.file_uploader("画像をアップロードしてください", type=["jpg", "jpeg", "png"])
                     if len(st.session_state.scenario_export) != 0 and st.session_state.character_image != None:
                         create_video()
