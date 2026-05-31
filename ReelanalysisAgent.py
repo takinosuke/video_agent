@@ -741,6 +741,8 @@ def show_main_page():
                     if st.session_state.character_image == []:
                         uploaded_file = st.file_uploader("画像をアップロードしてください", type=["jpg", "jpeg", "png"])
                         if st.button("実行", use_container_width=True, key="make_caractor"):
+                            st.session_state.scenario_export = userInputSenario
+                            st.session_state.character_image.Append(uploaded_file)
                             st.rerun()
                     if len(st.session_state.scenario_export) != 0 and st.session_state.character_image != None:
                         create_video()
