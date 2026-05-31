@@ -39,7 +39,7 @@ def create_video():
 
     # 2. ファイルアップローダーの配置
     #uploaded_file = st.file_uploader("画像を選択してください", type=["jpg", "jpeg", "png"])
-    uploaded_file = st.session_state.character_image
+    uploaded_file = st.session_state.character_image[0]
 
     # if uploaded_file is not None:
     #     # アップロードされた画像を画面に表示
@@ -55,7 +55,7 @@ def create_video():
         # ==========================================
         # uploaded_file.getvalue() でメモリ上の生データをそのまま渡せます
         upload_result = cloudinary.uploader.upload(
-            uploaded_file.getvalue()
+            uploaded_file[0].getvalue()
         )
         
         # 4. レスポンスから公開URL（直リンク）を抽出
