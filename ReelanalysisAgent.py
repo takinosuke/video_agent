@@ -55,7 +55,7 @@ def create_video():
         # ==========================================
         # uploaded_file.getvalue() でメモリ上の生データをそのまま渡せます
         upload_result = cloudinary.uploader.upload(
-            uploaded_file[0].getvalue()
+            uploaded_file.getvalue()
         )
         
         # 4. レスポンスから公開URL（直リンク）を抽出
