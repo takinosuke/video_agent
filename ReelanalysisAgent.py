@@ -82,7 +82,7 @@ def create_video():
                     "type": "microsoft",
                     "voice_id": "ja-JP-NanamiNeural"
                 },
-                "input": "ここにAIアバターに喋らせたいテキストを入力します。"
+                "input": "あなたの銀行預金、まさか…\nそのままじゃ、お金が減り続ける…！\n「え、なんで？」って思いますよね？\nその原因は..."
             },
             "config": {
                 "fluent": false,
