@@ -133,6 +133,8 @@ def create_video():
             break
         
         except Exception as e:
+            st.write("exceptionに入った。")
+            st.write(e)
             wait = (2 ** attempt) + random.uniform(0, 1)
             time.sleep(wait)
             if attempt == 4:
@@ -753,7 +755,8 @@ def show_main_page():
                             st.session_state.character_image.append(uploaded_file)
                             st.rerun()
                     if len(st.session_state.scenario_export) != 0 and st.session_state.character_image != None:
-                        create_video()
+                        with st.spinner("動画生成中・・・"):
+                            create_video()
                         
         # クリアボタン
         if st.button("会話クリア", use_container_width=True, key="clear_button"):
