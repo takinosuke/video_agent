@@ -138,7 +138,8 @@ def create_video():
             if attempt == 4:
                 return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
     #return raw_text
-
+    st.write(f"""D-idに渡すJSONは：{raw_text}""")
+    st.write("D-id処理開始")
     DID_API_KEY = st.secrets["DID_API_KEY"]
     # 1. 動画生成をリクエストする（POST）
     URL_POST = "https://api.d-id.com/talks"
@@ -168,6 +169,7 @@ def create_video():
     # --------------------------------------------------
     URL_GET = f"https://api.d-id.com/talks/{talk_id}"
     print("動画の生成完了を待っています...")
+    st.write("動画生成完了待ち中")
 
     while True:
         get_response = requests.get(URL_GET, headers=HEADERS)
