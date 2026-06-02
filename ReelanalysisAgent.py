@@ -106,7 +106,8 @@ def create_video():
         try:           
             response = genai_client.models.generate_content(
                 model='gemini-2.5-flash',
-                contents=prompt
+                contents=prompt,
+                config={"response_mime_type": "application/json"}
             )
             raw_text = response.text
             st.session_state.messages.append(raw_text)
