@@ -74,40 +74,22 @@ def create_video():
         st.error(f"エラーが発生しました: {e}")
     
     did_format = """
-        {
-            "script": {
-                "type": "text",
-                "subtitles": false,
-                "provider": {
-                    "type": "microsoft",
-                    "voice_id": "ja-JP-NanamiNeural"
-                },
-                "input": "あなたの銀行預金、まさか…\nそのままじゃ、お金が減り続ける…！\n「え、なんで？」って思いますよね？\nその原因は..."
+    {
+        "script": {
+            "type": "text",
+            "provider": {
+                "type": "microsoft",
+                "voice_id": "ja-JP-NanamiNeural"
             },
-            "config": {
-                "fluent": false,
-                "pad_audio": "0.0"
-            },
-            "source_url": "https://your-storage-bucket.com/path/to/your/avatar-image.jpg"
-        }
+            "input": "ここに台本が入ります"
+        },
+        "source_url": "https://example.com/image.jpg"
+    }
     """
 
     prompt = f"""
-        あなたはD-ID（動画生成AI）のAPI連携を行うシステムです。
+        あなたはD-IDのAPI連携を行うシステムです。
         提供された「台本」と「画像URL」をもとに、D-IDの `/talks` エンドポイントへ送信するための有効なJSONデータを作成してください。
-
-        # 出力ルール（絶対厳守）
-        1. 出力は「有効なJSONオブジェクト」のみとしてください。
-        2. マークダウンのコードブロック（```json ... ```）や、前置き・後置きの解説テキストは一切含めず、最初の「{{」から最後の「}}」までを出力してください。
-        3. JSONのパースエラーを防ぐため、"input" 内の文字列に含まれる「ダブルクォーテーション」は必ず「\\"」にエスケープし、「改行」はすべて「\\n」に置換して1行にまとめてください。
-
-        # エスケープ処理の例
-        【入力される台本】
-        こんにちは。
-        "お勧め"のプランです。
-        
-        【正しいJSONの "input" 部分の出力例】
-        "input": "こんにちは。\\n\\"お勧め\\"のプランです。"
 
         # 入力データ
         ### 台本
@@ -116,7 +98,7 @@ def create_video():
         ### 画像URL
         {public_url}
 
-        # 出力フォーマット（この構造をベースに値を差し替えてください）
+        # 出力フォーマット（このJSON構造に値を差し替えて、JSONのみを出力してください）
         {did_format} 
     """
     raw_text = ""
