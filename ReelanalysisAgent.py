@@ -155,7 +155,7 @@ def create_video():
         "content-type": "application/json",
         "Authorization": f"Basic {DID_API_KEY}"
     }
-    PAYLOAD = raw_text
+    PAYLOAD = json.loads(raw_text)
     # --------------------------------------------------
     # ステップ 1: 動画生成ジョブの作成
     # --------------------------------------------------
