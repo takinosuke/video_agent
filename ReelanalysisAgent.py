@@ -83,7 +83,7 @@ def create_video():
             },
             "input": "ここに台本が入ります"
         },
-        "source_url": "https://example.com/image.jpg"
+        "source_url": "https://example.com/image.jpg",
         "config": {
             "fluent": true,
             "pad_audio": true,
