@@ -234,7 +234,7 @@ def create_image():
         st.image(img_data, caption=f"Generated Image {i+1}", use_container_width=True)
         # 画像オブジェクトを配列に追加（Gemini用）
         section_images_list.append(img.image)
-        st.session_state.character_image.append(img.image)
+        st.session_state.character_image.append(img.image.image_bytes)
 
 #台本作成エージェント
 def senarioAgent(input):
