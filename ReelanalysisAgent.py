@@ -16,8 +16,8 @@ import cloudinary
 import cloudinary.uploader
 
 # ページ設定
-st.set_page_config(page_title="AIチャット", page_icon="🤖")
-st.title("🤖 AIチャット")
+st.set_page_config(page_title="動画生成AI", page_icon="🤖")
+st.title("🤖 動画生成AI")
 
 def try_parse_method(input_string):
     try:
