@@ -14,6 +14,8 @@ import google.genai.types as types
 import streamlit as st
 import cloudinary
 import cloudinary.uploader
+import io
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 # ページ設定
 st.set_page_config(page_title="動画生成AI", page_icon="🤖")
