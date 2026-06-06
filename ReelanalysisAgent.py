@@ -79,13 +79,14 @@ def create_video():
     {
         "script": {
             "type": "text",
+            "sub_type": "tts",
             "provider": {
                 "type": "microsoft",
                 "voice_id": "ja-JP-NanamiNeural"
             },
             "input": "ここにクレンジング済みの台本が入ります"
         },
-        "source_url": "[https://example.com/image.jpg](https://example.com/image.jpg)",
+        "source_url": "https://example.com/image.jpg",
         "config": {
             "stitch": true
         }
@@ -209,7 +210,7 @@ def create_video():
             break
             
         # 5秒待ってから再確認
-        time.sleep(5)    
+        time.sleep(5)
 
 # 画像生成関数    
 def create_image():
