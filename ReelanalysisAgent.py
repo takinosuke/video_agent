@@ -79,14 +79,15 @@ def create_video():
     {
         "script": {
             "type": "text",
-            "sub_type": "tts",
             "provider": {
-                "type": "microsoft",
-                "voice_id": "ja-JP-NanamiNeural"
+            "type": "microsoft",
+            "voice_config": {
+                "id": "ja-JP-NanamiNeural"
+            }
             },
             "input": "ここにクレンジング済みの台本が入ります"
         },
-        "source_url": "https://example.com/image.jpg",
+        "source_url": "https://res.cloudinary.com/dcfbnm5lk/image/upload/v1780729282/lg8sxlm9xvlbxs60jvun.png",
         "config": {
             "stitch": true
         }
@@ -169,6 +170,8 @@ def create_video():
     if response.status_code != 201:
         print(f"エラーが発生しました (Status Code: {response.status_code})")
         print(response.text)
+        st.write(f"エラーが発生しました (Status Code: {response.status_code})")
+        st.write(response.text)
         exit()
 
     res_data = response.json()
