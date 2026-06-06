@@ -87,8 +87,6 @@ def create_video():
         },
         "source_url": "https://example.com/image.jpg"
         "config": {
-            "fluent": true,
-            "pad_audio": true,
             "stitch": true
         }
     }
