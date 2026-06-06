@@ -14,8 +14,6 @@ import google.genai.types as types
 import streamlit as st
 import cloudinary
 import cloudinary.uploader
-import io
-from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 # ページ設定
 st.set_page_config(page_title="動画生成AI", page_icon="🤖")
@@ -52,14 +50,16 @@ def create_video():
     st.info("Cloudinaryへアップロード中...")
     
     try:
-        # ==========================================
-        # 3. Cloudinaryへバイナリデータを直接送信
-        # ==========================================
-        # uploaded_file.getvalue() でメモリ上の生データをそのまま渡せます
-        upload_result = cloudinary.uploader.upload(
-            uploaded_file.getvalue()
-        )
-        
+        # 🌟対策2: データの型（手動アップロードか、Gemini生成バイナリか）を判定して適切に処理
+        if hasattr(uploaded_file, "getvalue"):
+            # st.file_uploader から取得したオブジェクトの場合
+            file_data = uploaded_file.getvalue()
+        else:
+            # すでに bytes 型データ（Gemini生成画像）の場合
+            file_data = uploaded_file
+
+        # Cloudinaryへバイナリデータを送信
+        upload_result = cloudinary.uploader.upload(file_data)
         # 4. レスポンスから公開URL（直リンク）を抽出
         # secure_url を使うことで「https://...」から始まる安全なURLが取得できます
         public_url = upload_result.get("secure_url")
@@ -208,8 +208,7 @@ def create_video():
             break
             
         # 5秒待ってから再確認
-        time.sleep(5)
-    
+        time.sleep(5)    
 
 # 画像生成関数    
 def create_image():
