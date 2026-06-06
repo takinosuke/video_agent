@@ -80,12 +80,10 @@ def create_video():
         "script": {
             "type": "text",
             "provider": {
-            "type": "azure",
-            "voice_config": {
-                "id": "ja-JP-NanamiNeural"
-            }
+            "type": "microsoft",
+            "voice_id": "ja-JP-NanamiNeural"
             },
-            "input": "ここにクレンジング済みの台本が入ります"
+            "input": "え、嘘でしょ？ ステップワン: なになにをインストール ステップツー: なになにを設定 これが超重要ポイント！ 他の投資と何が違うの？ なになにだから、一度設定すれば後は完全放置でオーケー！ 専門知識も難しい分析も、一切いりません。 僕も最初は半信半疑だったんですけど… 正直、ここまで簡単だとは… 特に なになにが不安な人は試す価値あり。 会社員、主婦、学生でも… 詳細設定のやり方は… この動画を見返したいあなたは… "
         },
         "source_url": "https://res.cloudinary.com/dcfbnm5lk/image/upload/v1780729282/lg8sxlm9xvlbxs60jvun.png",
         "config": {
