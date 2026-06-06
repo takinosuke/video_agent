@@ -236,20 +236,7 @@ def create_image():
         st.image(img_data, caption=f"Generated Image {i+1}", use_container_width=True)
         # 画像オブジェクトを配列に追加（Gemini用）
         section_images_list.append(img.image)
-        # st.session_state.character_image.append(img.image)
-        file_stream = io.BytesIO(img_data)
-        pseudo_uploaded_file = UploadedFile(
-            file_id=f"generated_{i}_{int(time.time())}",
-            name=f"generated_image_{i+1}.png",
-            type="image/png",
-            size=len(img_data)
-        )
-        # 作成したオブジェクトに、ストリームデータを紐付け
-        pseudo_uploaded_file.write(file_stream.getbuffer())
-        pseudo_uploaded_file.seek(0)
-        # 3. 配列とsession_stateに追加
-        section_images_list.append(pseudo_uploaded_file)
-        st.session_state.character_image.append(pseudo_uploaded_file)
+        st.session_state.character_image.append(img_data)
 
 #台本作成エージェント
 def senarioAgent(input):
