@@ -80,7 +80,7 @@ def create_video():
         "script": {
             "type": "text",
             "provider": {
-            "type": "microsoft",
+            "type": "azure",
             "voice_config": {
                 "id": "ja-JP-NanamiNeural"
             }
