@@ -230,7 +230,9 @@ def create_image():
         image_response = genai_client.models.generate_images(
             model='models/imagen-4.0-fast-generate-001',
             prompt=prompt, # ユーザーからの入力
-            # ...その他の設定
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+            )
         )
     except ClientError as e:
         # 安全フィルターなどでブロックされた場合の処理
@@ -238,7 +240,7 @@ def create_image():
             print("入力されたキーワードでは画像を生成できません。別の言葉を試してください。")
         else:
             print(f"エラーが発生しました: {e}")
-            
+    
     # このセクションの4枚を配列に格納
     section_images_list = []
     # 4枚すべてを表示
