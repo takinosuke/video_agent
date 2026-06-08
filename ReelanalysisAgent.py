@@ -14,6 +14,7 @@ import google.genai.types as types
 import streamlit as st
 import cloudinary
 import cloudinary.uploader
+from google.genai.errors import ClientError
 
 # ページ設定
 st.set_page_config(page_title="動画生成AI", page_icon="🤖")
@@ -225,13 +226,19 @@ def create_image():
     # 最低限のクールダウン
     time.sleep(5)
     
-    image_response = genai_client.models.generate_images(
-        model='models/imagen-4.0-fast-generate-001',
-        prompt=prompt,
-        config=types.GenerateImagesConfig(
-            number_of_images=1,
+    try:
+        image_response = genai_client.models.generate_images(
+            model='models/imagen-4.0-fast-generate-001',
+            prompt=prompt, # ユーザーからの入力
+            # ...その他の設定
         )
-    )
+    except ClientError as e:
+        # 安全フィルターなどでブロックされた場合の処理
+        if "violated Google's Responsible AI practices" in str(e):
+            print("入力されたキーワードでは画像を生成できません。別の言葉を試してください。")
+        else:
+            print(f"エラーが発生しました: {e}")
+            
     # このセクションの4枚を配列に格納
     section_images_list = []
     # 4枚すべてを表示
