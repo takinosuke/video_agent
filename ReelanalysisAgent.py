@@ -796,8 +796,8 @@ def show_main_page():
                                 st.write("パターンは何番を使用しますか。")                                
                                 if pattern := st.chat_input("使用するパターンを入力してください。...",key="input_1"):
                                     jadge = jadgePattern(pattern)
-                                    st.write(f"""戻り値は：{jadge}""")
-                                    if jadge > 0:
+                                    #st.write(f"""戻り値は：{jadge}""")
+                                    if int(jadge) > 0:
                                         if st.button("キャラクタ作成へ", use_container_width=True, key="make_caractor"):
                                             st.session_state.transitionState += 1
                                             st.rerun()
