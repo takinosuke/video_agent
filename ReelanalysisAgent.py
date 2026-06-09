@@ -791,7 +791,7 @@ def show_main_page():
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
                             st.write(response)
-                            if len(st.session_state.scenario_pattern) > 1:
+                            if st.session_state.scenario_pattern > 1:
                                 if pattern := st.chat_input("メッセージを入力してください...",key="input_1"):
                                     jadge = jadgePattern(pattern)
                                     if jadge > 0:
