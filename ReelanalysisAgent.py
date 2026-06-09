@@ -322,6 +322,41 @@ def senarioAgent(input):
            
     return "AIの応答を生成できませんでした。"
 
+# パターン判定
+def jadgePattern(userImput):
+    prompt = f"""
+        下記のユーザーインプットが何番のパターンを選んでいるか教えてほしいです。
+        返答は純粋な数字のみを返してください。それをそのままint型変数に格納します。
+        もしパターンの数字以外の文言が入力された場合には0を返すようにしてください。
+
+        # ユーザーの入力
+        {userImput}
+    """
+    raw_text = 0
+    for attempt in range(2):
+        try:           
+            response = genai_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            raw_text = response.text
+            st.session_state.messages.append(raw_text)
+            # --- トークン計測の追加 ---
+            usage = response.usage_metadata
+            st.info(f"消費トークン - 入力: {usage.prompt_token_count}, 出力: {usage.candidates_token_count}, 合計: {usage.total_token_count}")
+            st.session_state.gemini_input_token += usage.prompt_token_count
+            st.session_state.gemini_output_token += usage.candidates_token_count
+            st.session_state.gemini_total_token += usage.total_token_count
+            # -----------------------
+            break
+        
+        except Exception as e:
+            wait = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(wait)
+            if attempt == 4:
+                return "申し訳ありません。接続エラーが発生しました。もう一度入力していただけますか？"
+    return raw_text
+
 #yes/noジャッジエージェント
 def jadgeAgent(userImput):
     prompt = f"""
@@ -652,10 +687,10 @@ def show_form_page():
         character_make = st.selectbox("キャラクターの作成が必要かどうか。", ["作成する", "作成しない"])
         character_visivleFlag = (character_make == "作成しない")
         character_sex = st.selectbox("キャラクターの性別を選択してください。", ["男性", "女性", "その他"], disabled = character_visivleFlag)
-        character_tribe = st.text_input(label="キャラクターの種族を入れてください。", placeholder="例：エルフ", disabled = character_visivleFlag)
+        character_tribe = st.text_input(label="キャラクターの種族を入れてください。", placeholder="例：人間", disabled = character_visivleFlag)
         character_hairstyle = st.text_input(label="キャラクターのヘア-スタイルを入れてください。", placeholder="例：角刈り", disabled = character_visivleFlag)
         character_haircolors = st.text_input(label="キャラクターの髪の毛の色を入れてください。", placeholder="例：赤", disabled = character_visivleFlag)
-        character_eyeshape = st.text_input(label="キャラクターの目の特徴を入れてください。", placeholder="例：つり目", disabled = character_visivleFlag)
+        character_eyeshape = st.text_input(label="キャラクターの目の特徴を入れてください。", placeholder="例：優しい目", disabled = character_visivleFlag)
         character_eyecolors = st.text_input(label="キャラクターの目の色を入れてください。", placeholder="例：青", disabled = character_visivleFlag)
         character_other = st.text_input(label="その他のキャラクターの特徴を入れてください。", placeholder="例：翼", disabled = character_visivleFlag)
         character_location = st.text_input(label="背景を入力してください。", placeholder="例：近未来都市", disabled = character_visivleFlag)
@@ -681,17 +716,28 @@ def show_form_page():
             st.session_state.scenario_pattern = try_parse_method(senario_pattern)
             # キャラクター設定の決定
             st.session_state.character_make = (character_make == "作成する")
-            st.session_state.character_sex = character_sex
-            st.session_state.character_tribe = character_tribe
-            st.session_state.character_hairstyle = character_hairstyle
-            st.session_state.character_haircolors = character_haircolors
-            st.session_state.character_eyeshape = character_eyeshape
-            st.session_state.character_eyecolors = character_eyecolors
-            st.session_state.character_other = character_other
-            st.session_state.character_location = character_location
-            st.session_state.character_environment = character_environment
-            st.session_state.character_touch = character_touch
-            st.session_state.character_tone = character_tone
+            if st.session_state.character_sex != None:
+                st.session_state.character_sex = "性別：" + character_sex
+            if st.session_state.character_tribe != None:
+                st.session_state.character_tribe = "種族：" + character_tribe
+            if st.session_state.character_hairstyle != None:
+                st.session_state.character_hairstyle = "髪型：" + character_hairstyle
+            if st.session_state.character_haircolors != None:
+                st.session_state.character_haircolors = "髪の色：" + character_haircolors
+            if st.session_state.character_eyeshape != None:
+                st.session_state.character_eyeshape = "目の特徴：" + character_eyeshape
+            if st.session_state.character_eyecolors != None:
+                st.session_state.character_eyecolors = "目の色：" + character_eyecolors
+            if st.session_state.character_other != None:
+                st.session_state.character_other = "その他の特徴：" + character_other
+            if st.session_state.character_location != None:
+                st.session_state.character_location = "キャラクターがいる場所：" + character_location
+            if st.session_state.character_environment != None:
+                st.session_state.character_environment = "キャラクターがいる環境：" + character_environment
+            if st.session_state.character_touch != None:
+                st.session_state.character_touch = "キャラクターの雰囲気：" + character_touch
+            if st.session_state.character_tone != None:
+                st.session_state.character_tone = "全体的なトーン：" + character_tone
             #動画作成の決定
             st.session_state.video_make = (video_make == "作成する")
             st.session_state.video_haveCharacter = video_haveCharacter
@@ -715,7 +761,7 @@ def show_main_page():
                         st.rerun()
                     ## 最初の分岐。0：動画分析セクション。1：台本作成セクション
                     analysis = identifyUserNeeds(st.session_state.analysis_contants, st.session_state.analysis_numbers, st.session_state.analysis_genre)
-                    st.session_state.analysisText = analysis          
+                    st.session_state.analysisText = analysis
                     st.session_state.transitionState += 1
                     st.rerun() # 画面を再描画して切り替える)
                 # 分析結果から台本作成結果までの処理
@@ -745,10 +791,21 @@ def show_main_page():
                         with st.spinner("台本執筆中..."):
                             response = senarioAgent(st.session_state.analysisText)
                             st.write(response)
-                            
-                            if st.button("キャラクタ作成へ", use_container_width=True, key="make_caractor"):
-                                st.session_state.transitionState += 1
-                                st.rerun()
+                            if len(st.session_state.scenario_pattern) > 1:
+                                if pattern := st.chat_input("メッセージを入力してください...",key="input_1"):
+                                    jadge = jadgePattern(pattern)
+                                    if jadge > 0:
+                                        if st.button("キャラクタ作成へ", use_container_width=True, key="make_caractor"):
+                                            st.session_state.transitionState += 1
+                                            st.rerun()
+                                    else:
+                                        st.Write("再度パターンを入力してください。")
+                                        time.sleep(2)
+                                        st.rerun()
+                            else:
+                                if st.button("キャラクタ作成へ", use_container_width=True, key="make_caractor"):
+                                    st.session_state.transitionState += 1
+                                    st.rerun()
                 # キャラクター作成部分
                 elif st.session_state.transitionState == 3:
                     if st.session_state.character_make == False:
