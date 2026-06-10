@@ -104,6 +104,7 @@ def create_video():
     1. **文字数制限（上限300文字）**:
     - `input` に格納するテキストは、改行やスペースを含めて【必ず300文字以内】としてください。
     - 提供された台本が300文字を超える場合は、文脈を維持したまま、300文字以内に収まるよう内容を整えてください。301文字以上の出力は不可とします。
+    - 台本のパターンが複数ある場合は、下記記載のパターン番号を使用すること。
 
     2. **音声合成（TTS）向けのテキスト処理**:
     - 「〇」などの伏字は、音声エラーを防ぐため適切な言葉（例: 「数万円」「なになに」など）に置き換えるか削除してください。
@@ -123,6 +124,9 @@ def create_video():
 
     # 出力フォーマット
     {did_format}
+    
+    ↓使用するパターン
+    {st.session_state.scenario_usenumber}
     """
     raw_text = ""
     for attempt in range(2):
@@ -798,7 +802,8 @@ def show_main_page():
                                     jadge = jadgePattern(pattern)
                                     #st.write(f"""戻り値は：{jadge}""")
                                     if int(jadge) > 0:
-                                        if st.button("キャラクタ作成へ", use_container_width=True, key="make_caractor"):
+                                            st.session_state.scenario_usenumber = int(jadge)
+                                            st.write("処理完了。キャラクタ作成へ移行します。")
                                             st.session_state.transitionState += 1
                                             st.rerun()
                                     else:
@@ -899,6 +904,8 @@ def setup_app():
         st.session_state.scenario_pattern = ""
     if 'scenario_export' not in st.session_state:
         st.session_state.scenario_export = ""
+    if 'scenario_usenumber' not in st.session_state:
+        st.session_state.scenario_usenumber = 1
     #キャラクター設定入力保存用
     if 'character_make' not in st.session_state:
         st.session_state.character_make = False
